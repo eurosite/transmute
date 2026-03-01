@@ -81,6 +81,8 @@ npm run build
 - libmagic1: For filetype detection when there are no extensions
 - cairo: SVG interpreting / conversions
 - Drawio Desktop App: To render `.drawio` files
+- pandoc: For document conversions (markdown, docx, html, etc.)
+- pango: Required by weasyprint for PDF generation
 
 #### 3.4. Spin up the app locally
 

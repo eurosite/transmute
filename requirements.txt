@@ -11,3 +11,5 @@ python-magic==0.4.27
 pydantic-settings==2.13.0
 pillow_heif==1.2.1
 uvicorn==0.41.0
+pypandoc==1.16.2
+weasyprint==68.1
