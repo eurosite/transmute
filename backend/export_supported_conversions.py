@@ -1,3 +1,6 @@
+
+import argparse
+from pathlib import Path
 from registry import ConverterRegistry
 import json
 
@@ -20,7 +23,16 @@ def get_supported_conversions():
     return supported_conversions
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Export OpenAPI schema to JSON")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("supported_conversions.json"),
+        help="Destination file path (default: ./openapi.json)",
+    )
+    args = parser.parse_args()
+
     supported_conversions = get_supported_conversions()
-    with open("supported_conversions.json", "w") as f:
+    with open(args.output, "w") as f:
         json.dump(supported_conversions, f, indent=4)
     print(f"Total combinations: {len(supported_conversions)}")
