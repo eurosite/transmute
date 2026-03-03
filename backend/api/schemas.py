@@ -33,6 +33,13 @@ class ConversionItem(BaseModel):
 class ConversionListResponse(BaseModel):
     conversions: list[ConversionItem] = Field(..., description="List of completed conversions")
 
+class ConverterMetadata(BaseModel):
+    name: str = Field(..., example="drawio_convert")
+    supported_input_formats: list[str] = Field(..., example=["drawio"])
+    supported_output_formats: list[str] = Field(..., example=["png", "pdf", "jpg"])
+
+class ConverterMetadataListResponse(BaseModel):
+    converters: list[ConverterMetadata] = Field(..., description="List of the available converters")
 
 class ErrorResponse(BaseModel):
     detail: str = Field(..., example="No converter found for jpg to png", description="Error message")
