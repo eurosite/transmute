@@ -5,11 +5,15 @@ export type ThemeName = 'rubedo' | 'citrinitas' | 'viriditas' | 'nigredo' | 'alb
 interface ThemeContextValue {
   theme: ThemeName
   setTheme: (theme: ThemeName) => void
+  keepOriginals: boolean
+  setKeepOriginals: (value: boolean) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'rubedo',
   setTheme: () => {},
+  keepOriginals: true,
+  setKeepOriginals: () => {},
 })
 
 const STORAGE_KEY = 'transmute-theme'
@@ -33,6 +37,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Initialise from localStorage so React state matches what the blocking
   // script already applied to the DOM — avoids a redundant re-render.
   const [theme, setThemeState] = useState<ThemeName>(readStoredTheme)
+  const [keepOriginals, setKeepOriginals] = useState(true)
 
   const setTheme = useCallback((name: ThemeName) => {
     setThemeState(name)
@@ -47,12 +52,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       .then(data => {
         const name = (data?.theme ?? 'rubedo') as ThemeName
         setTheme(name)
+        setKeepOriginals(data?.keep_originals ?? true)
       })
       .catch(() => {/* keep whatever localStorage had */})
   }, [setTheme])
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, keepOriginals, setKeepOriginals }}>
       {children}
     </ThemeContext.Provider>
   )

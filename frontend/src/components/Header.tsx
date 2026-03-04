@@ -1,7 +1,10 @@
 import { Link, NavLink } from 'react-router-dom'
 import { FaArrowRightArrowLeft, FaClockRotateLeft, FaBook, FaFile, FaGear } from 'react-icons/fa6'
+import { useTheme } from '../ThemeContext'
 
 function Header() {
+  const { keepOriginals } = useTheme()
+
   return (
     <header className="bg-surface-dark">
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -32,16 +35,18 @@ function Header() {
             >
               <FaArrowRightArrowLeft />
             </NavLink>
-            <NavLink
-              to="/files"
-              className={({ isActive }) =>
-                `px-3 py-2 rounded-md text-xl font-medium transition duration-200 ${isActive ? 'text-primary' : 'text-text hover:text-primary'}`
-              }
-              title="Files"
-              aria-label="Files"
-            >
-              <FaFile />
-            </NavLink>
+            {keepOriginals && (
+              <NavLink
+                to="/files"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-md text-xl font-medium transition duration-200 ${isActive ? 'text-primary' : 'text-text hover:text-primary'}`
+                }
+                title="Files"
+                aria-label="Files"
+              >
+                <FaFile />
+              </NavLink>
+            )}
             <NavLink
               to="/history"
               className={({ isActive }) =>

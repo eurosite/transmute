@@ -43,7 +43,7 @@ interface AppSettings {
 }
 
 function Settings() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, setKeepOriginals } = useTheme()
   const [autoDownload, setAutoDownload] = useState(false)
   const [saveOriginals, setSaveOriginals] = useState(true)
   const [cleanupTtl, setCleanupTtl] = useState(60)
@@ -97,6 +97,7 @@ function Settings() {
         body: JSON.stringify({ theme, auto_download: autoDownload, keep_originals: saveOriginals, cleanup_ttl_minutes: cleanupTtl }),
       })
       if (!response.ok) throw new Error('Failed to save settings')
+      setKeepOriginals(saveOriginals)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {

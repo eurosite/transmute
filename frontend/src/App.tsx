@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import { ThemeProvider } from './ThemeContext'
+import { ThemeProvider, useTheme } from './ThemeContext'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import Converter from './pages/Converter'
@@ -26,6 +26,22 @@ function RouteTitle() {
   return null
 }
 
+function AppRoutes() {
+  const { keepOriginals } = useTheme()
+  return (
+    <Routes>
+      <Route path="/" element={<Converter />} />
+      <Route
+        path="/files"
+        element={keepOriginals ? <Files /> : <Navigate to="/" replace />}
+      />
+      <Route path="/history" element={<History />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  )
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -34,13 +50,7 @@ function App() {
         <div className="flex flex-col h-screen overflow-hidden">
           <Header />
           <main className="flex-grow overflow-auto">
-            <Routes>
-              <Route path="/" element={<Converter />} />
-              <Route path="/files" element={<Files />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppRoutes />
           </main>
           <Footer />
         </div>
