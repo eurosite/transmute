@@ -7,9 +7,13 @@
   Transmute
 </h1>
 
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/transmute-app/transmute/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green?logo=git&logoColor=white)](https://github.com/transmute-app/transmute/blob/main/LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://github.com/transmute-app/transmute/blob/main/docker-compose.yml)
-![Status](https://img.shields.io/badge/status-active%20development-yellow)
+![Status](https://img.shields.io/badge/status-development-orange)
+
+![Docker Image Size](https://img.shields.io/docker/image-size/neonvariant/transmute?logo=docker&logoColor=white&color=gray)
+![GitHub repo size](https://img.shields.io/github/repo-size/transmute-app/transmute?logo=github&logoColor=white&color=gray)
+
 
 The self-hosted file converter that lets you convert anything, anywhere.
 
