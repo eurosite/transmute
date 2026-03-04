@@ -5,4 +5,7 @@ media_type_aliases = {
     'yml': 'yaml',
     'alac': 'm4a',
     'aif': 'aiff',
+    'tif': 'tiff',
+    'htm': 'html',
+    'mpg': 'mpeg',
 }
