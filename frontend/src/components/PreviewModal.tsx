@@ -1,5 +1,130 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { FaTimes, FaMusic, FaPlay, FaPause, FaVolumeUp, FaVolumeMute, FaExpand, FaCopy, FaCheck } from 'react-icons/fa'
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
+import vscDarkPlus from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus'
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript'
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx'
+import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx'
+import python from 'react-syntax-highlighter/dist/esm/languages/prism/python'
+import ruby from 'react-syntax-highlighter/dist/esm/languages/prism/ruby'
+import java from 'react-syntax-highlighter/dist/esm/languages/prism/java'
+import c from 'react-syntax-highlighter/dist/esm/languages/prism/c'
+import cpp from 'react-syntax-highlighter/dist/esm/languages/prism/cpp'
+import csharp from 'react-syntax-highlighter/dist/esm/languages/prism/csharp'
+import go from 'react-syntax-highlighter/dist/esm/languages/prism/go'
+import rust from 'react-syntax-highlighter/dist/esm/languages/prism/rust'
+import swift from 'react-syntax-highlighter/dist/esm/languages/prism/swift'
+import kotlin from 'react-syntax-highlighter/dist/esm/languages/prism/kotlin'
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash'
+import powershell from 'react-syntax-highlighter/dist/esm/languages/prism/powershell'
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
+import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml'
+import xml from 'react-syntax-highlighter/dist/esm/languages/prism/markup'
+import css from 'react-syntax-highlighter/dist/esm/languages/prism/css'
+import scss from 'react-syntax-highlighter/dist/esm/languages/prism/scss'
+import sass from 'react-syntax-highlighter/dist/esm/languages/prism/sass'
+import less from 'react-syntax-highlighter/dist/esm/languages/prism/less'
+import graphql from 'react-syntax-highlighter/dist/esm/languages/prism/graphql'
+import sql from 'react-syntax-highlighter/dist/esm/languages/prism/sql'
+import toml from 'react-syntax-highlighter/dist/esm/languages/prism/toml'
+import ini from 'react-syntax-highlighter/dist/esm/languages/prism/ini'
+import diff from 'react-syntax-highlighter/dist/esm/languages/prism/diff'
+import batch from 'react-syntax-highlighter/dist/esm/languages/prism/batch'
+
+SyntaxHighlighter.registerLanguage('javascript', javascript)
+SyntaxHighlighter.registerLanguage('typescript', typescript)
+SyntaxHighlighter.registerLanguage('tsx', tsx)
+SyntaxHighlighter.registerLanguage('jsx', jsx)
+SyntaxHighlighter.registerLanguage('python', python)
+SyntaxHighlighter.registerLanguage('ruby', ruby)
+SyntaxHighlighter.registerLanguage('java', java)
+SyntaxHighlighter.registerLanguage('c', c)
+SyntaxHighlighter.registerLanguage('cpp', cpp)
+SyntaxHighlighter.registerLanguage('csharp', csharp)
+SyntaxHighlighter.registerLanguage('go', go)
+SyntaxHighlighter.registerLanguage('rust', rust)
+SyntaxHighlighter.registerLanguage('swift', swift)
+SyntaxHighlighter.registerLanguage('kotlin', kotlin)
+SyntaxHighlighter.registerLanguage('bash', bash)
+SyntaxHighlighter.registerLanguage('powershell', powershell)
+SyntaxHighlighter.registerLanguage('json', json)
+SyntaxHighlighter.registerLanguage('yaml', yaml)
+SyntaxHighlighter.registerLanguage('xml', xml)
+SyntaxHighlighter.registerLanguage('html', xml)
+SyntaxHighlighter.registerLanguage('css', css)
+SyntaxHighlighter.registerLanguage('scss', scss)
+SyntaxHighlighter.registerLanguage('sass', sass)
+SyntaxHighlighter.registerLanguage('less', less)
+SyntaxHighlighter.registerLanguage('graphql', graphql)
+SyntaxHighlighter.registerLanguage('sql', sql)
+SyntaxHighlighter.registerLanguage('toml', toml)
+SyntaxHighlighter.registerLanguage('ini', ini)
+SyntaxHighlighter.registerLanguage('diff', diff)
+SyntaxHighlighter.registerLanguage('batch', batch)
+
+// A markdown grammar that does NOT embed the HTML/markup tokenizer.
+// Prism's built-in markdown grammar inherits from markup, which tokenizes
+// <img> and other inline HTML as block-level nodes and inserts newlines.
+// refractor (PrismLight's backend) requires the function to have a displayName.
+function markdownSafeLang(Prism: any) {
+  Prism.languages['markdown-safe'] = {
+    'code-block': {
+      pattern: /^(```+)[^`\n]*\n[\s\S]*?\n\1/m,
+      greedy: true,
+      alias: 'string',
+    },
+    'code-inline': {
+      pattern: /`[^`\n]+`/,
+      greedy: true,
+      alias: 'string',
+    },
+    'heading': {
+      pattern: /^#{1,6}(?= ).+/m,
+      alias: 'keyword',
+    },
+    'image': {
+      pattern: /!\[[^\]\n]*\]\([^)\n]+\)/,
+      greedy: true,
+      alias: 'attr-value',
+    },
+    'link': {
+      pattern: /\[[^\]\n]*\]\([^)\n]+\)/,
+      greedy: true,
+      alias: 'attr-value',
+    },
+    'bold': {
+      pattern: /\*\*(?:[^*\n]|\*(?!\*))+\*\*|__(?:[^_\n]|_(?!_))+__/,
+      alias: 'bold',
+    },
+    'italic': {
+      pattern: /\*(?:[^*\n])+\*|_(?:[^_\n])+_/,
+      alias: 'italic',
+    },
+    'blockquote': {
+      pattern: /^>[ \t].*/m,
+      alias: 'comment',
+    },
+    'list-marker': {
+      pattern: /^[ \t]*(?:[-*+]|\d+[.)]) /m,
+      alias: 'punctuation',
+    },
+    'table-separator': {
+      pattern: /^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$/m,
+      alias: 'comment',
+    },
+    'table-pipe': {
+      pattern: /\|/,
+      alias: 'punctuation',
+    },
+    'hr': {
+      pattern: /^(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/m,
+      alias: 'comment',
+    },
+  }
+}
+markdownSafeLang.displayName = 'markdown-safe'
+SyntaxHighlighter.registerLanguage('markdown-safe', markdownSafeLang)
 
 const PREVIEWABLE_IMAGE = new Set([
   'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif',
@@ -260,6 +385,139 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+// Maps file extension to a Prism language identifier
+const EXT_TO_LANGUAGE: Record<string, string> = {
+  js: 'javascript', ts: 'typescript', tsx: 'tsx', jsx: 'jsx',
+  py: 'python', rb: 'ruby', java: 'java', c: 'c', cpp: 'cpp',
+  h: 'c', hpp: 'cpp', cs: 'csharp', go: 'go', rs: 'rust',
+  swift: 'swift', kt: 'kotlin', sh: 'bash', bash: 'bash',
+  zsh: 'bash', bat: 'batch', ps1: 'powershell',
+  json: 'json', yaml: 'yaml', yml: 'yaml', xml: 'xml',
+  html: 'html', htm: 'html', css: 'css', scss: 'scss',
+  sass: 'sass', less: 'less', graphql: 'graphql', gql: 'graphql',
+  sql: 'sql', md: 'markdown-safe', rst: 'plain', tex: 'plain',
+  toml: 'toml', ini: 'ini', diff: 'diff', patch: 'diff',
+  srt: 'plain', ass: 'plain', vtt: 'plain', log: 'plain',
+  env: 'bash', conf: 'bash', cfg: 'bash', properties: 'bash',
+  tsv: 'plain', txt: 'plain',
+}
+
+const RAINBOW_COLUMN_COLORS = [
+  'text-[#60a5fa]', // blue-400
+  'text-[#34d399]', // emerald-400
+  'text-[#f87171]', // red-400
+  'text-[#fbbf24]', // amber-400
+  'text-[#a78bfa]', // violet-400
+  'text-[#fb923c]', // orange-400
+  'text-[#38bdf8]', // sky-400
+  'text-[#4ade80]', // green-400
+  'text-[#f472b6]', // pink-400
+  'text-[#facc15]', // yellow-400
+]
+
+function CsvViewer({ content }: { content: string }) {
+  const lines = content.split('\n')
+  const delimiter = content.includes('\t') ? '\t' : ','
+
+  const parsedRows = lines
+    .filter(l => l.trim() !== '')
+    .map(line => {
+      // Simple CSV parse: handle quoted fields
+      const fields: string[] = []
+      let cur = ''
+      let inQuotes = false
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i]
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++ }
+          else { inQuotes = !inQuotes }
+        } else if (ch === delimiter && !inQuotes) {
+          fields.push(cur); cur = ''
+        } else {
+          cur += ch
+        }
+      }
+      fields.push(cur)
+      return fields
+    })
+
+  if (parsedRows.length === 0) return <pre className="text-sm text-text font-mono">{content}</pre>
+
+  const [header, ...rows] = parsedRows
+
+  return (
+    <table className="text-xs font-mono border-collapse min-w-full">
+      <thead>
+        <tr className="border-b border-surface-dark/60 bg-surface-dark/40">
+          {header.map((cell, ci) => (
+            <th
+              key={ci}
+              className={`px-3 py-1.5 text-left font-semibold break-words max-w-[14rem] ${RAINBOW_COLUMN_COLORS[ci % RAINBOW_COLUMN_COLORS.length]}`}
+            >
+              {cell}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, ri) => (
+          <tr key={ri} className={ri % 2 === 0 ? '' : 'bg-surface-dark/20'}>
+            {row.map((cell, ci) => (
+              <td
+                key={ci}
+                className={`px-3 py-1 break-words max-w-[14rem] ${RAINBOW_COLUMN_COLORS[ci % RAINBOW_COLUMN_COLORS.length]}`}
+              >
+                {cell}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+function TextViewer({ content, mediaType }: { content: string; mediaType: string }) {
+  const ext = mediaType.toLowerCase()
+  const isCsv = ext === 'csv'
+  const isTsv = ext === 'tsv'
+
+  if (isCsv || isTsv) {
+    return (
+      <div className="relative w-[80vw] max-h-[75vh]">
+        <CopyButton text={content} />
+        <div className="w-full h-full overflow-auto bg-surface-dark rounded-lg p-5 pb-8">
+          <CsvViewer content={content} />
+        </div>
+      </div>
+    )
+  }
+
+  const language = EXT_TO_LANGUAGE[ext] ?? 'plain'
+  const usePlain = language === 'plain'
+
+  return (
+    <div className="relative w-[80vw] max-h-[75vh]">
+      <CopyButton text={content} />
+      {usePlain ? (
+        <pre className="w-full h-full overflow-auto text-sm text-text bg-surface-dark rounded-lg p-5 pb-8 whitespace-pre font-mono leading-relaxed">
+          {content}
+        </pre>
+      ) : (
+        <div className="w-full h-full overflow-auto rounded-lg text-sm [&>pre]:!m-0 [&>pre]:!rounded-lg [&>pre]:!max-h-[75vh] [&>pre]:!overflow-auto">
+          <SyntaxHighlighter
+            language={language}
+            style={vscDarkPlus}
+            customStyle={{ margin: 0, borderRadius: '0.5rem', fontSize: '0.8125rem', lineHeight: '1.6', paddingBottom: '2rem', overflowX: 'auto' }}
+          >
+            {content}
+          </SyntaxHighlighter>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AudioPlayer({ src, mediaType }: { src: string; mediaType: string }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const controls = useMediaControls(audioRef)
@@ -438,10 +696,7 @@ function PreviewModal({ fileId, filename, mediaType, onClose }: PreviewModalProp
           {previewType === 'text' && (
             textLoading
               ? <p className="text-text-muted text-sm">Loading...</p>
-              : <div className="relative w-[80vw] max-h-[75vh]">
-                  <CopyButton text={textContent ?? ''} />
-                  <pre className="w-full h-full overflow-auto text-sm text-text bg-surface-dark rounded-lg p-5 whitespace-pre-wrap break-words font-mono leading-relaxed">{textContent}</pre>
-                </div>
+              : <TextViewer content={textContent ?? ''} mediaType={mediaType} />
           )}
           {!previewType && (
             <p className="text-text-muted text-sm">Preview not available for this file type.</p>
