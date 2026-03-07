@@ -66,10 +66,12 @@ jobs:
 
       - name: Resolve release context
         id: release_context
+        env:
+          INPUT_VERSION_TAG: ${{ inputs.version_tag }}
         shell: bash
         run: |
-          if [[ -n "${{ inputs.version_tag }}" ]]; then
-            VERSION_TAG="${{ inputs.version_tag }}"
+          if [[ -n "$INPUT_VERSION_TAG" ]]; then
+            VERSION_TAG="$INPUT_VERSION_TAG"
           else
             VERSION_TAG="${GITHUB_REF_NAME}"
           fi
@@ -91,10 +93,12 @@ jobs:
       - name: Determine if latest version tag
         id: check_latest
         if: startsWith(github.ref, 'refs/tags/') || inputs.version_tag != ''
+        env:
+          INPUT_VERSION_TAG: ${{ inputs.version_tag }}
         run: |
           git fetch --tags --quiet
-          if [[ -n "${{ inputs.version_tag }}" ]]; then
-            CURRENT_TAG="${{ inputs.version_tag }}"
+          if [[ -n "$INPUT_VERSION_TAG" ]]; then
+            CURRENT_TAG="$INPUT_VERSION_TAG"
           else
             CURRENT_TAG="${GITHUB_REF#refs/tags/}"
           fi

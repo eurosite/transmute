@@ -16,22 +16,23 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write
 
 jobs:
   bump-version:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.release.outputs.new_version }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - id: release
-        uses: chase-roohms/tag-and-release@v1
+        uses: chase-roohms/tag-and-release@v1  # zizmor: ignore[unpinned-uses]
         with:
           version_bump: ${{ github.event.inputs.bump_type }}
           update_parent_tags: true
