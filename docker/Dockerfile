@@ -2,8 +2,11 @@
 FROM node:25-alpine AS frontend-builder
 
 WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
 COPY frontend/ .
-RUN npm install && npm run build
+RUN npm run build
 
 # Stage 2: Runtime
 FROM python:3.13-slim

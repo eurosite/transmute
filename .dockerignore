@@ -1,0 +1,10 @@
+.DS_Store
+.git
+.github
+.vscode
+**/__pycache__/
+data/
+assets/
+docs/
+frontend/node_modules/
+frontend/dist/
