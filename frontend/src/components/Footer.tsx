@@ -2,8 +2,23 @@ import { useEffect, useState } from 'react'
 import { FaGithub, FaExternalLinkAlt, FaBook } from 'react-icons/fa'
 import { publicFetch as fetch } from '../utils/api'
 
+const RELEASE_VERSION_PATTERN = /^v\d+\.\d+\.\d+$/
+const COMMIT_SHA_PATTERN = /^[0-9a-f]{7}$/i
+
+function getVersionHref(version: string): string | null {
+  if (version === 'dev') return null
+  if (RELEASE_VERSION_PATTERN.test(version)) {
+    return `https://github.com/transmute-app/transmute/releases/tag/${version}`
+  }
+  if (COMMIT_SHA_PATTERN.test(version)) {
+    return `https://github.com/transmute-app/transmute/commit/${version}`
+  }
+  return null
+}
+
 function Footer() {
   const [appInfo, setAppInfo] = useState<{ name: string; version: string } | null>(null)
+  const versionHref = appInfo?.version ? getVersionHref(appInfo.version) : null
 
   useEffect(() => {
     fetch('/api/health/info')
@@ -23,7 +38,19 @@ function Footer() {
           <span>
             {appInfo?.name || 'Transmute'}
             {appInfo?.version && (
-              <span className="ml-2 text-text-muted/60">v{appInfo.version}</span>
+              versionHref ? (
+                <a
+                  href={versionHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 text-text-muted/60 hover:text-text transition-colors"
+                  title={appInfo.version === 'dev' ? 'Development build' : `Version ${appInfo.version}`}
+                >
+                  {appInfo.version}
+                </a>
+              ) : (
+                <span className="ml-2 text-text-muted/60">{appInfo.version}</span>
+              )
             )}
           </span>
           <span className="text-text-muted/30">|</span>
