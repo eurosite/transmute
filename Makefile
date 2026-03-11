@@ -81,7 +81,15 @@ lint: lint-frontend ## Run all linters
 lint-frontend: ## Lint frontend code with ESLint
 	cd frontend && npm run lint
 
+
 check: lint ## Run all checks (alias for lint)
+
+# ----------------------------------------------------------------------------
+# Testing
+# ----------------------------------------------------------------------------
+
+test-backend: ## Run Python backend tests with pytest
+	$(PYTHON) -m pytest backend
 
 # ----------------------------------------------------------------------------
 # Docker
