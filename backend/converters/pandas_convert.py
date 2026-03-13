@@ -2,6 +2,7 @@ import os
 import configparser
 import sqlite3
 import tomllib
+import warnings
 
 import pandas as pd
 import pyreadstat
@@ -102,6 +103,16 @@ class PandasConverter(ConverterInterface):
         
         return True
 
+    def _read_xlsx(self):
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore',
+                message='Unknown extension is not supported and will be removed',
+                category=UserWarning,
+                module='openpyxl\\.worksheet\\._reader',
+            )
+            return pd.read_excel(self.input_file)
+
     def convert(self, overwrite: bool = True, quality: Optional[str] = None) -> list[str]:
         """
         Convert the input file to the output format using Pandas.
@@ -159,7 +170,7 @@ class PandasConverter(ConverterInterface):
         if self.input_type == 'csv':
             df = pd.read_csv(self.input_file)
         elif self.input_type == 'xlsx':
-            df = pd.read_excel(self.input_file)
+            df = self._read_xlsx()
         elif self.input_type == 'json':
             with open(self.input_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
