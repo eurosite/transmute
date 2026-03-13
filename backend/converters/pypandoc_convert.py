@@ -62,8 +62,32 @@ class PyPandocConverter(ConverterInterface):
     # dependency and its system libraries are included in the Docker image).
     _pdf_engine = 'weasyprint'
 
-    # Mapping from our format names to Pandoc format identifiers
-    _pandoc_format_map = {
+    # Pandoc reader and writer format identifiers are not fully symmetric.
+    # In particular, `plain` is a writer but not a valid reader in Pandoc 3.x,
+    # so `.txt` inputs use the permissive markdown reader instead.
+    _pandoc_input_format_map = {
+        'md': 'gfm',
+        'html': 'html',
+        'txt': 'markdown',
+        'docx': 'docx',
+        'rst': 'rst',
+        'tex': 'latex',
+        'tex': 'latex',
+        'epub': 'epub',
+        'odt': 'odt',
+        'rtf': 'rtf',
+        'org': 'org',
+        'textile': 'textile',
+        'mediawiki': 'mediawiki',
+        'adoc': 'asciidoc',
+        'pdf': 'pdf',
+        'ipynb': 'ipynb',
+        'fb2': 'fb2',
+        'muse': 'muse',
+        'opml': 'opml',
+        'dbk': 'docbook',
+    }
+    _pandoc_output_format_map = {
         'md': 'gfm',
         'html': 'html',
         'txt': 'plain',
@@ -134,9 +158,9 @@ class PyPandocConverter(ConverterInterface):
         formats = cls.supported_output_formats - {fmt}
         return formats
 
-    def _get_pandoc_format(self, fmt: str) -> str:
+    def _get_pandoc_input_format(self, fmt: str) -> str:
         """
-        Map our format name to a Pandoc format identifier.
+        Map our input format name to a Pandoc reader identifier.
 
         Args:
             fmt: Our internal format name.
@@ -144,7 +168,41 @@ class PyPandocConverter(ConverterInterface):
         Returns:
             The Pandoc format string.
         """
-        return self._pandoc_format_map.get(fmt.lower(), fmt.lower())
+        return self._pandoc_input_format_map.get(fmt.lower(), fmt.lower())
+
+    def _get_pandoc_output_format(self, fmt: str) -> str:
+        """
+        Map our output format name to a Pandoc writer identifier.
+
+        Args:
+            fmt: Our internal format name.
+
+        Returns:
+            The Pandoc format string.
+        """
+        return self._pandoc_output_format_map.get(fmt.lower(), fmt.lower())
+
+    def _build_extra_args(self) -> list[str]:
+        extra_args: list[str] = []
+        input_dir = str(Path(self.input_file).resolve().parent)
+
+        # Resolve relative resources such as linked images from the source file's directory.
+        extra_args.append(f'--resource-path={input_dir}')
+
+        # Org files often contain export options Pandoc does not understand.
+        # They are non-fatal and produce noisy stderr, so keep this path quiet.
+        if self.input_type.lower() == 'org':
+            extra_args.append('--quiet')
+
+        if self.output_type.lower() == 'pdf':
+            extra_args.append(f'--pdf-engine={self._pdf_engine}')
+            if self._pdf_engine == 'weasyprint':
+                extra_args.append('--pdf-engine-opt=--quiet')
+
+        if self.output_type.lower() in ('html', 'revealjs', 'slidy', 's5', 'dzslides'):
+            extra_args.append('--standalone')
+
+        return extra_args
 
     def convert(self, overwrite: bool = True, quality: Optional[str] = None) -> list[str]:
         """
@@ -181,22 +239,16 @@ class PyPandocConverter(ConverterInterface):
             return [output_file]
 
         try:
-            input_pandoc_fmt = self._get_pandoc_format(self.input_type)
-            output_pandoc_fmt = self._get_pandoc_format(self.output_type)
-
-            # Extra args for specific output formats
-            extra_args = []
-            if self.output_type.lower() == 'pdf':
-                extra_args.append(f'--pdf-engine={self._pdf_engine}')
-            if self.output_type.lower() in ('html', 'revealjs', 'slidy', 's5', 'dzslides'):
-                extra_args.append('--standalone')
+            input_pandoc_fmt = self._get_pandoc_input_format(self.input_type)
+            output_pandoc_fmt = self._get_pandoc_output_format(self.output_type)
+            extra_args = self._build_extra_args()
 
             pypandoc.convert_file(
                 self.input_file,
                 output_pandoc_fmt,
                 format=input_pandoc_fmt,
                 outputfile=output_file,
-                extra_args=extra_args if extra_args else [],
+                extra_args=extra_args,
             )
 
             if not os.path.exists(output_file):
