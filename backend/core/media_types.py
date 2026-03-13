@@ -11,4 +11,5 @@ media_type_aliases = {
     'htm': 'html',
     'mpg': 'mpeg',
     'asciidoc': 'adoc',
+    'latex': 'tex',
 }
