@@ -53,7 +53,6 @@ class PyPandocConverter(ConverterInterface):
         'mediawiki',
         'pptx',
         'dbk',
-        'jira',
         'muse',
         'opml',
     }
@@ -109,7 +108,6 @@ class PyPandocConverter(ConverterInterface):
         'opml': 'opml',
         'dbk': 'docbook',
         'pptx': 'pptx',
-        'jira': 'jira',
     }
 
     def __init__(self, input_file: str, output_dir: str, input_type: str, output_type: str):
