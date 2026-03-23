@@ -3,6 +3,7 @@ import re
 import sqlite3
 import mimetypes
 import hashlib
+import logging
 import magic
 
 from typing import TYPE_CHECKING
@@ -128,6 +129,51 @@ def validate_sql_identifier(identifier: str) -> str:
     return identifier
 
 
+def detect_pdf_type(file_path: Path) -> str:
+    """
+    Detect the specific PDF type (e.g. PDF/A, PDF/X) by inspecting
+    XMP metadata with PyMuPDF.
+
+    PDF subtypes declare themselves in XMP metadata using standard
+    namespaces (pdfaid for PDF/A, pdfxid for PDF/X, etc.).
+
+    Args:
+        file_path: Path to the PDF file to analyze
+
+    Returns:
+        A string indicating the PDF type (e.g. "pdf/a", "pdf/x"), or "pdf" if no specific type is detected
+    """
+    import fitz
+
+    try:
+        doc = fitz.open(str(file_path))
+    except Exception as exc:
+        raise ValueError(f"Could not open PDF: {exc}") from exc
+
+    try:
+        if not doc.is_pdf:
+            raise ValueError(f"File is not a PDF: {file_path}")
+
+        xmp = doc.get_xml_metadata() or ""
+
+        # Each PDF subtype declares itself in XMP with a distinct namespace prefix
+        _XMP_SUBTYPE_MARKERS = {
+            "pdfaid:part": "pdf/a",
+            "pdfxid:GTS_PDFXVersion": "pdf/x",
+            "pdfeid:GTS_PDFEVersion": "pdf/e",
+            "pdfuaid:part": "pdf/ua",
+            "pdfvtid:GTS_PDFVTVersion": "pdf/vt",
+        }
+        for marker, subtype in _XMP_SUBTYPE_MARKERS.items():
+            if marker in xmp:
+                logging.debug("Detected PDF subtype '%s' for '%s'", subtype, file_path)
+                return subtype
+    finally:
+        doc.close()
+
+    return "pdf"
+
+
 def detect_media_type(file_path: Path) -> str:
     """
     Detect the media type of a file based on its extension.
@@ -144,11 +190,17 @@ def detect_media_type(file_path: Path) -> str:
     # Use extensions as the media_type
     filename = file_path.name
     extension = get_file_extension(filename)
-    if not extension:
+    if extension == 'pdf':
+        # For PDFs, use libmagic to detect specific PDF types (e.g. PDF/A)
+        media_type = detect_pdf_type(file_path)
+    elif not extension:
         # If no extension, try to detect using magic
         media_type = magic.from_file(str(file_path), mime=True)
         extension = mimetypes.guess_extension(media_type) or ""
-    media_type = extension.lstrip('.').lower()
+        media_type = extension.lstrip('.').lower()
+    else:
+        media_type = extension.lstrip('.').lower()
+    print(f"Detected media type '{media_type}' for file '{file_path}' with extension '{extension}'")
     return media_type
 
 def sanitize_extension(extension: str) -> str:
