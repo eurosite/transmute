@@ -156,15 +156,17 @@ def detect_pdf_type(file_path: Path) -> str:
 
         xmp = doc.get_xml_metadata() or ""
 
-        # Each PDF subtype declares itself in XMP with a distinct namespace prefix
-        _XMP_SUBTYPE_MARKERS = {
-            "pdfaid:part": "pdf/a",
-            "pdfxid:GTS_PDFXVersion": "pdf/x",
-            "pdfeid:GTS_PDFEVersion": "pdf/e",
-            "pdfuaid:part": "pdf/ua",
-            "pdfvtid:GTS_PDFVTVersion": "pdf/vt",
-        }
-        for marker, subtype in _XMP_SUBTYPE_MARKERS.items():
+        # Each PDF subtype declares itself in XMP with a distinct namespace prefix.
+        # More-specific subtypes (PDF/VT) must be checked before general ones
+        # (PDF/X) because PDF/VT files also contain PDF/X markers.
+        _XMP_SUBTYPE_MARKERS = [
+            ("pdfvtid:GTS_PDFVTVersion", "pdf/vt"),
+            ("pdfaid:part", "pdf/a"),
+            ("pdfuaid:part", "pdf/ua"),
+            ("ISO_PDFEVersion", "pdf/e"),
+            ("pdfxid:GTS_PDFXVersion", "pdf/x"),
+        ]
+        for marker, subtype in _XMP_SUBTYPE_MARKERS:
             if marker in xmp:
                 return subtype
     finally:
