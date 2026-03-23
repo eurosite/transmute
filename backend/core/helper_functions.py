@@ -166,7 +166,6 @@ def detect_pdf_type(file_path: Path) -> str:
         }
         for marker, subtype in _XMP_SUBTYPE_MARKERS.items():
             if marker in xmp:
-                logging.debug("Detected PDF subtype '%s' for '%s'", subtype, file_path)
                 return subtype
     finally:
         doc.close()
@@ -200,7 +199,6 @@ def detect_media_type(file_path: Path) -> str:
         media_type = extension.lstrip('.').lower()
     else:
         media_type = extension.lstrip('.').lower()
-    print(f"Detected media type '{media_type}' for file '{file_path}' with extension '{extension}'")
     return media_type
 
 def sanitize_extension(extension: str) -> str:
