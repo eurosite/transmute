@@ -11,6 +11,7 @@ import History from './pages/History'
 import Files from './pages/Files'
 import Settings from './pages/Settings'
 import Users from './pages/Users'
+import Stats from './pages/Stats'
 import NotFound from './pages/NotFound'
 
 function RouteTitle() {
@@ -25,6 +26,7 @@ function RouteTitle() {
       '/settings': 'Transmute - Settings',
       '/account': 'Transmute - My Account',
       '/admin/users': 'Transmute - User Management',
+      '/admin/stats': 'Transmute - Stats',
     }
 
     document.title = titles[location.pathname] || 'Transmute'
@@ -103,6 +105,7 @@ function AppRoutes() {
       <Route path="/settings" element={<RequireAuth><RejectGuest><Settings /></RejectGuest></RequireAuth>} />
       <Route path="/account" element={<RequireAuth><RejectGuest><Account /></RejectGuest></RequireAuth>} />
       <Route path="/admin/users" element={<RequireAuth><RequireAdmin><Users /></RequireAdmin></RequireAuth>} />
+      <Route path="/admin/stats" element={<RequireAuth><RequireAdmin><Stats /></RequireAdmin></RequireAuth>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

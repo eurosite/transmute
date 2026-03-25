@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { FaArrowRightArrowLeft, FaChevronDown, FaClockRotateLeft, FaFile, FaGear, FaRightFromBracket, FaUser, FaUsers } from 'react-icons/fa6'
+import { FaArrowRightArrowLeft, FaChartBar, FaChevronDown, FaClockRotateLeft, FaFile, FaGear, FaRightFromBracket, FaUser, FaUsers } from 'react-icons/fa6'
 import { useAuth } from '../AuthContext'
 import { useTheme } from '../ThemeContext'
 
@@ -123,16 +123,28 @@ function Header() {
                           Settings
                         </NavLink>
                         {isAdmin && (
-                          <NavLink
-                            to="/admin/users"
-                            onClick={() => setMenuOpen(false)}
-                            className={({ isActive }) =>
-                              `mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${isActive ? 'bg-primary/10 text-primary-light' : 'text-text hover:bg-surface-light hover:text-primary'}`
-                            }
-                          >
-                            <FaUsers className="text-sm" />
-                            User Management
-                          </NavLink>
+                          <>
+                            <NavLink
+                              to="/admin/users"
+                              onClick={() => setMenuOpen(false)}
+                              className={({ isActive }) =>
+                                `mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${isActive ? 'bg-primary/10 text-primary-light' : 'text-text hover:bg-surface-light hover:text-primary'}`
+                              }
+                            >
+                              <FaUsers className="text-sm" />
+                              User Management
+                            </NavLink>
+                            <NavLink
+                              to="/admin/stats"
+                              onClick={() => setMenuOpen(false)}
+                              className={({ isActive }) =>
+                                `mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${isActive ? 'bg-primary/10 text-primary-light' : 'text-text hover:bg-surface-light hover:text-primary'}`
+                              }
+                            >
+                              <FaChartBar className="text-sm" />
+                              Stats
+                            </NavLink>
+                          </>
                         )}
                       </>
                     )}
