@@ -33,6 +33,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ffmpeg \
     ghostscript \
+    tesseract-ocr \
     libsm6 \
     libxext6 \
     libopengl0 \

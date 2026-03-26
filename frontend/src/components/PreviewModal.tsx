@@ -132,7 +132,7 @@ const PREVIEWABLE_IMAGE = new Set([
 ])
 const PREVIEWABLE_VIDEO = new Set(['mp4', 'webm', 'ogg'])
 const PREVIEWABLE_AUDIO = new Set(['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'opus'])
-const PREVIEWABLE_PDF = new Set(['pdf'])
+const PREVIEWABLE_PDF = new Set(['pdf', 'pdf/a', 'pdf/x', 'pdf/e', 'pdf/ua', 'pdf/vt'])
 const PREVIEWABLE_TEXT = new Set([
   'txt', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'js', 'ts',
   'md', 'yaml', 'yml', 'log', 'srt', 'ass', 'vtt',

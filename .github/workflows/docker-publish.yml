@@ -22,6 +22,7 @@ on:
       - 'docker/**'
       - 'frontend/**'
       - 'backend/**'
+      - 'docs/other/vex.json'
       - 'requirements.txt'
 
 env:
@@ -301,6 +302,15 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.manifest.outputs.digest }}
 
+      - name: Attach VEX attestation
+        id: scout-vex-attach
+        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1.18.2
+        with:
+          command: attestation-add
+          image: ghcr.io/${{ github.repository }}:${{ inputs.version_tag != '' && steps.meta_release.outputs.version || steps.meta_push.outputs.version }}
+          file: docs/other/vex.json
+          predicate-type: https://openvex.dev/ns/v0.2.0
+      
       - name: Run Docker Scout Scan
         id: scout-scan
         uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de  # v1.18.2
@@ -310,6 +320,9 @@ jobs:
           sarif-file: ${{ runner.temp }}/scout-critical-high-medium.sarif
           write-comment: false
           only-severities: critical,high,medium
+          vex-location: docs/other/vex.json
+          vex-author: transmute-app
+          only-vex-affected: true
 
       - name: Upload Scout results to GitHub Advanced Security
         uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6  # v4.32.3
