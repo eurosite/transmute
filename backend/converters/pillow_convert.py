@@ -99,10 +99,8 @@ class PillowConverter(ConverterInterface):
         'pnm',
         'pfm',
     }
-    qualities = {
-        'low',
-        'medium',
-        'high',
+    formats_with_qualities = {
+        'jpeg',
     }
     
     def __init__(self, input_file: str, output_dir: str, input_type: str, output_type: str):

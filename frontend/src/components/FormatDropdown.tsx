@@ -10,6 +10,7 @@ interface FormatDropdownProps {
   placeholder?: string
   disabled?: boolean
   triggerClassName?: string
+  presorted?: boolean
 }
 
 function FormatDropdown({
@@ -20,6 +21,7 @@ function FormatDropdown({
   placeholder = 'Select...',
   disabled = false,
   triggerClassName = '',
+  presorted = false,
 }: FormatDropdownProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -30,7 +32,7 @@ function FormatDropdown({
   const [highlightIndex, setHighlightIndex] = useState(-1)
   const [positioned, setPositioned] = useState(false)
 
-  const sorted = useMemo(() => [...formats].sort(), [formats])
+  const sorted = useMemo(() => presorted ? formats : [...formats].sort(), [formats, presorted])
 
   const filtered = useMemo(() =>
     sorted.filter(f => f.toLowerCase().includes(search.toLowerCase())),

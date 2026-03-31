@@ -47,10 +47,8 @@ class LibreOfficeConverter(ConverterInterface):
         'png',
         'jpeg',
     }
-    qualities = {
-        'low',
-        'medium',
-        'high',
+    formats_with_qualities = {
+        'jpeg',
     }
 
     # LibreOffice binary paths by platform
@@ -184,7 +182,7 @@ class LibreOfficeConverter(ConverterInterface):
                 return self._convert_text_via_pptx(overwrite)
 
             if self.output_type in ('jpeg', 'png', 'eps'):
-                return self._convert_to_image(overwrite)
+                return self._convert_to_image(overwrite, quality)
 
             return self._convert_with_libreoffice(overwrite)
 
@@ -335,7 +333,7 @@ class LibreOfficeConverter(ConverterInterface):
     # Image output via PDF intermediary (all input formats, all pages)
     # ------------------------------------------------------------------
 
-    def _convert_to_image(self, overwrite: bool) -> list[str]:
+    def _convert_to_image(self, overwrite: bool, quality: str = 'medium') -> list[str]:
         """Render every slide as an image by going PPTX → PDF → image."""
         import fitz  # PyMuPDF
         from PIL import Image
@@ -398,7 +396,13 @@ class LibreOfficeConverter(ConverterInterface):
             y_offset += img.height
 
         if self.output_type == 'jpeg':
-            combined.save(output_file, 'JPEG', quality=95)
+            if quality == 'low':
+                q = 50
+            elif quality == 'high':
+                q = 95
+            else:
+                q = 80
+            combined.save(output_file, 'JPEG', quality=q)
         elif self.output_type == 'png':
             combined.save(output_file, 'PNG')
         elif self.output_type == 'eps':

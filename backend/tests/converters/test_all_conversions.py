@@ -39,7 +39,7 @@ def _collect_conversion_cases() -> list[tuple[str, str, str]]:
             continue
 
         input_fmt = registry.get_normalized_format(ext)
-        compatible = registry.get_compatible_formats(input_fmt)
+        compatible = registry.get_compatible_formats_and_qualities(input_fmt).keys()
 
         for output_fmt in sorted(compatible):
             cases.append((sample.name, input_fmt, output_fmt))

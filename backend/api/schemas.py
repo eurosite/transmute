@@ -17,11 +17,11 @@ class FileMetadata(BaseModel):
     size_bytes: int = Field(..., example=204800)
     sha256_checksum: str = Field(..., example="abc123def456...")
     user_id: str = Field(..., example="67118d71-a0c5-443c-80b5-e222bb63bfc2")
-    compatible_formats: list[str] = Field(..., example=["png", "gif", "webp"], description="List of compatible output formats")
+    compatible_formats: dict[str, list[str]] = Field(..., example={"png": [], "gif": [], "webp": ["low", "medium", "high"]}, description="Map of compatible output formats to their available quality options")
 
 
 class FileMetadataWithFormats(FileMetadata):
-    compatible_formats: list[str] = Field(..., example=["png", "gif", "webp"], description="List of compatible output formats")
+    compatible_formats: dict[str, list[str]] = Field(..., example={"png": [], "gif": [], "webp": ["low", "medium", "high"]}, description="Map of compatible output formats to their available quality options")
 
 
 class ConversionItem(BaseModel):

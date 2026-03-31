@@ -18,10 +18,8 @@ class DrawioConverter(ConverterInterface):
         'svg',
         'jpeg',
     }
-    qualities = {
-        'low',
-        'medium',
-        'high',
+    formats_with_qualities = {
+        'jpeg',
     }
     drawio_paths = {
         'darwin': '/Applications/draw.io.app/Contents/MacOS/draw.io',

@@ -6,6 +6,13 @@ class ConverterInterface:
     supported_input_formats: set = set()  # To be defined by subclasses with supported input formats
     supported_output_formats: set = set()  # To be defined by subclasses with supported output formats
     qualities: set = set()  # Optional quality settings for conversion, can be overridden by subclasses
+    formats_with_qualities: set = set()  # Optional set of output formats that have quality options, can be overridden by subclasses
+
+    qualities = {
+        'low',
+        'medium',
+        'high',
+    }
 
     def __init__(self, input_file: str, output_dir: str, input_type: str, output_type: str):
         """
@@ -59,6 +66,26 @@ class ConverterInterface:
             Set of compatible formats.
         """
         return cls.supported_output_formats - {format_type.lower()}
+    
+    @classmethod
+    def get_quality_options(cls) -> set:
+        """
+        Get the set of quality options available for this converter.
+        
+        Returns:
+            Set of quality options.
+        """
+        return cls.qualities
+    
+    @classmethod
+    def get_formats_with_quality_options(cls) -> set:
+        """
+        Get the set of output formats that have quality options available.
+        
+        Returns:
+            Set of output formats with quality options.
+        """
+        return cls.formats_with_qualities
     
     def convert(self, overwrite: bool = True, quality: Optional[str] = None) -> list[str]:
         """

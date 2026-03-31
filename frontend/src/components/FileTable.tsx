@@ -10,7 +10,7 @@ export interface FileInfo {
   extension: string
   size_bytes: number
   created_at?: string
-  compatible_formats?: string[]
+  compatible_formats?: Record<string, string[]>
 }
 
 export interface ConversionInfo {
@@ -27,9 +27,11 @@ export interface FileTableRow {
   file: FileInfo
   conversion?: ConversionInfo
   selectedFormat?: string
+  selectedQuality?: string
   status?: 'pending' | 'failed'
   statusMessage?: string
   onFormatChange?: (format: string) => void
+  onQualityChange?: (quality: string) => void
   onDelete?: () => void
   onDownload?: () => void
   onPreview?: () => void
@@ -126,6 +128,9 @@ function FileTable({
   }
 
   const hasActions = rows.some(r => r.onDownload || r.onDelete || r.onPreview)
+  const hasQuality = isPending && rows.some(r =>
+    r.selectedFormat && r.file.compatible_formats?.[r.selectedFormat]?.length
+  )
 
   if (rows.length === 0) return null
 
@@ -169,6 +174,11 @@ function FileTable({
                 Format <SortIcon column="type" />
               </button>
             </th>
+            {hasQuality && (
+              <th className="px-4 py-3">
+                <span className="uppercase">Quality</span>
+              </th>
+            )}
             <th
               className="px-4 py-3"
               aria-sort={sortColumn=== 'size' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
@@ -243,10 +253,10 @@ function FileTable({
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
                   {(row.conversion || row.selectedFormat) ? (
-                    isPending && row.file.compatible_formats && row.file.compatible_formats.length > 0 && row.onFormatChange ? (
+                    isPending && row.file.compatible_formats && Object.keys(row.file.compatible_formats).length > 0 && row.onFormatChange ? (
                       <FormatDropdown
                         value={row.selectedFormat || ''}
-                        formats={row.file.compatible_formats!}
+                        formats={Object.keys(row.file.compatible_formats!)}
                         onChange={(format) => row.onFormatChange!(format)}
                         title={`${row.file.media_type} → ${row.selectedFormat || ''}`}
                       />
@@ -264,6 +274,27 @@ function FileTable({
                     </span>
                   )}
               </td>
+              {hasQuality && (
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {(() => {
+                    const qualities = row.selectedFormat ? row.file.compatible_formats?.[row.selectedFormat] : undefined
+                    const qualityOrder: Record<string, number> = { low: 0, medium: 1, high: 2 }
+                    const sortedQualities = qualities ? [...qualities].sort((a, b) => (qualityOrder[a] ?? 99) - (qualityOrder[b] ?? 99)) : undefined
+                    return sortedQualities && sortedQualities.length > 0 && row.onQualityChange ? (
+                      <FormatDropdown
+                        value={row.selectedQuality || ''}
+                        formats={sortedQualities}
+                        onChange={(quality) => row.onQualityChange!(quality)}
+                        placeholder="Quality"
+                        title={`Quality: ${row.selectedQuality || 'default'}`}
+                        presorted
+                      />
+                    ) : (
+                      <span className="text-xs text-text-muted">—</span>
+                    )
+                  })()}
+                </td>
+              )}
               <td
                 className="px-4 py-3 text-text-muted whitespace-nowrap"
                 title={row.conversion ? `${formatFileSize(row.file.size_bytes)} → ${formatFileSize(row.conversion.size_bytes)}` : undefined}

@@ -10,6 +10,7 @@ import { stripExtension } from '../utils/filename'
 interface PendingFile {
   file: FileInfo
   selectedFormat: string
+  selectedQuality?: string
   status: 'pending' | 'failed'
   errorMessage?: string
 }
@@ -77,7 +78,7 @@ function Converter() {
       const incomingFiles = location.state.files as FileInfo[]
       const newPendingFiles: PendingFile[] = incomingFiles.map(file => {
         const sortedFormats = file.compatible_formats
-          ? [...file.compatible_formats].sort()
+          ? Object.keys(file.compatible_formats).sort()
           : []
         const inputExt = file.extension?.replace(/^\./, '') || file.media_type || ''
         const normalizedExt = formatAliases[inputExt] || inputExt
@@ -85,9 +86,11 @@ function Converter() {
         const selectedFormat = (userDefault && sortedFormats.includes(userDefault))
           ? userDefault
           : sortedFormats[0] || ''
+        const qualities = (selectedFormat && file.compatible_formats?.[selectedFormat]) || []
         return {
           file,
           selectedFormat,
+          selectedQuality: qualities.includes('medium') ? 'medium' : undefined,
           status: 'pending',
         }
       })
@@ -129,7 +132,7 @@ function Converter() {
       }
 
       const sortedFormats = fileInfo.compatible_formats
-        ? [...fileInfo.compatible_formats].sort()
+        ? Object.keys(fileInfo.compatible_formats).sort()
         : []
       const inputExt = fileInfo.extension?.replace(/^\./, '') || fileInfo.media_type || ''
       const normalizedExt = formatAliases[inputExt] || inputExt
@@ -138,9 +141,11 @@ function Converter() {
         ? userDefault
         : sortedFormats[0] || ''
 
+      const qualities = (defaultFormat && fileInfo.compatible_formats?.[defaultFormat]) || []
       const pending: PendingFile = {
         file: fileInfo,
         selectedFormat: defaultFormat,
+        selectedQuality: qualities.includes('medium') ? 'medium' : undefined,
         status: 'pending',
       }
 
@@ -190,8 +195,18 @@ function Converter() {
 
   const handleFormatChange = (fileId: string, format: string) => {
     setPendingFiles((prev) =>
+      prev.map((pf) => {
+        if (pf.file.id !== fileId) return pf
+        const qualities = pf.file.compatible_formats?.[format] || []
+        return { ...pf, selectedFormat: format, selectedQuality: qualities.includes('medium') ? 'medium' : undefined, status: 'pending', errorMessage: undefined }
+      })
+    )
+  }
+
+  const handleQualityChange = (fileId: string, quality: string) => {
+    setPendingFiles((prev) =>
       prev.map((pf) =>
-        pf.file.id === fileId ? { ...pf, selectedFormat: format, status: 'pending', errorMessage: undefined } : pf
+        pf.file.id === fileId ? { ...pf, selectedQuality: quality } : pf
       )
     )
   }
@@ -231,8 +246,8 @@ function Converter() {
       )
     )
 
-    const promises = filesToConvert.map(async ({ file, selectedFormat }) => {
-      const inputFormat = file.extension?.replace(/^\./, '') || ''
+    const promises = filesToConvert.map(async ({ file, selectedFormat, selectedQuality }) => {
+      const inputFormat = file.extension?.replace(/^\.\//, '') || ''
 
       try {
         const response = await fetch('/api/conversions', {
@@ -244,6 +259,7 @@ function Converter() {
             id: file.id,
             input_format: inputFormat,
             output_format: selectedFormat,
+            ...(selectedQuality ? { quality: selectedQuality } : {}),
           }),
         })
 
@@ -554,6 +570,8 @@ function Converter() {
                   status: pf.status,
                   statusMessage: pf.errorMessage,
                   onFormatChange: (format: string) => handleFormatChange(pf.file.id, format),
+                  onQualityChange: (quality: string) => handleQualityChange(pf.file.id, quality),
+                  selectedQuality: pf.selectedQuality,
                   onDelete: () => handleDelete(pf.file.id, true),
                   onPreview: isPreviewable(pf.file.media_type) ? () => setPreviewFile({ id: pf.file.id, filename: pf.file.original_filename, mediaType: pf.file.media_type }) : undefined,
                   isDeleting: deletingId === pf.file.id,

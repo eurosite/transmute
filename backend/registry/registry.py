@@ -147,7 +147,7 @@ class ConverterRegistry:
                 result[name] = []
         return result
     
-    def get_compatible_formats(self, format_type) -> set[str]:
+    def get_compatible_formats_and_qualities(self, format_type) -> dict[str, set[str]]:
         """
         Get all formats compatible with the given format.
         
@@ -159,10 +159,10 @@ class ConverterRegistry:
             format_type: File format (e.g., 'jpg', 'mp4', 'csv')
         
         Returns:
-            Set of compatible format strings
+            Dictionary mapping compatible format strings to their available quality options
         """
         normalized_format = self.get_normalized_format(format_type)
-        compatible = set()
+        compatible = dict()
         
         # Find all converters that support this format
         converters_for_format = self.get_converters_for_input_format(normalized_format)
@@ -172,8 +172,11 @@ class ConverterRegistry:
             if not hasattr(converter_class, 'get_formats_compatible_with'):
                 continue
             
-            compatible.update(converter_class.get_formats_compatible_with(normalized_format))
-        
+            for compatible_format in converter_class.get_formats_compatible_with(normalized_format):
+                if compatible_format not in compatible:
+                    compatible[compatible_format] = set()
+                if compatible_format in converter_class.get_formats_with_quality_options():
+                    compatible[compatible_format].update(converter_class.get_quality_options())
         return compatible
     
     def get_format_compatibility_matrix(self) -> dict[str, set[str]]:
@@ -188,7 +191,7 @@ class ConverterRegistry:
         
         for fmt in all_formats:
             normalized_fmt = self.get_normalized_format(fmt)
-            matrix[normalized_fmt] = self.get_compatible_formats(normalized_fmt)
+            matrix[normalized_fmt] = self.get_compatible_formats_and_qualities(normalized_fmt).keys()
         
         return matrix
 

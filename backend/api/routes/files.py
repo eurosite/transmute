@@ -74,7 +74,7 @@ async def save_file(file: UploadFile, db: FileDB, user_id: str) -> dict:
         "user_id": user_id,
     }
     db.insert_file_metadata(metadata)
-    metadata["compatible_formats"] = converter_registry.get_compatible_formats(media_type)
+    metadata["compatible_formats"] = converter_registry.get_compatible_formats_and_qualities(media_type)
     return metadata
 
 
@@ -95,7 +95,7 @@ def list_files(
     """List all uploaded files for the current user"""
     files = file_db.list_files(user_id=current_user["uuid"])
     for file in files:
-        file["compatible_formats"] = converter_registry.get_compatible_formats(file["media_type"])
+        file["compatible_formats"] = converter_registry.get_compatible_formats_and_qualities(file["media_type"])
     return {"files": files}
 
 
