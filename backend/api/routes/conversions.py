@@ -127,6 +127,9 @@ def create_conversion(
     if conversion_request.quality:
         converted_metadata['quality'] = conversion_request.quality
     conversion_db.insert_file_metadata(converted_metadata)
+    # Re-add quality after insert (insert_file_metadata pops it)
+    if conversion_request.quality:
+        converted_metadata['quality'] = conversion_request.quality
     # Store relation with denormalized original file metadata
     conversion_relations_db.insert_conversion_relation({
         'original_file_id': og_id,

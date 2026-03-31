@@ -21,6 +21,7 @@ interface ConversionRecord {
   extension: string
   size_bytes: number
   created_at: string
+  quality?: string
   original_file?: OriginalFileInfo
 }
 
@@ -221,6 +222,7 @@ function History() {
                 extension: conversion.extension,
                 size_bytes: conversion.size_bytes,
                 created_at: conversion.created_at,
+                quality: conversion.quality,
               }
               return {
                 id: conversion.id,

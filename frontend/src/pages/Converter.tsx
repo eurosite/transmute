@@ -282,6 +282,7 @@ function Converter() {
           extension: data.extension,
           size_bytes: data.size_bytes,
           created_at: data.created_at,
+          quality: data.quality,
         }
 
         const completed: CompletedConversion = { file, conversion: conversionInfo }

@@ -20,6 +20,7 @@ export interface ConversionInfo {
   extension: string
   size_bytes: number
   created_at: string
+  quality?: string
 }
 
 export interface FileTableRow {
@@ -128,9 +129,9 @@ function FileTable({
   }
 
   const hasActions = rows.some(r => r.onDownload || r.onDelete || r.onPreview)
-  const hasQuality = isPending && rows.some(r =>
-    r.selectedFormat && r.file.compatible_formats?.[r.selectedFormat]?.length
-  )
+  const hasQuality = isPending
+    ? rows.some(r => r.selectedFormat && r.file.compatible_formats?.[r.selectedFormat]?.length)
+    : rows.some(r => r.conversion?.quality)
 
   if (rows.length === 0) return null
 
@@ -277,18 +278,27 @@ function FileTable({
               {hasQuality && (
                 <td className="px-4 py-3 whitespace-nowrap">
                   {(() => {
-                    const qualities = row.selectedFormat ? row.file.compatible_formats?.[row.selectedFormat] : undefined
-                    const qualityOrder: Record<string, number> = { low: 0, medium: 1, high: 2 }
-                    const sortedQualities = qualities ? [...qualities].sort((a, b) => (qualityOrder[a] ?? 99) - (qualityOrder[b] ?? 99)) : undefined
-                    return sortedQualities && sortedQualities.length > 0 && row.onQualityChange ? (
-                      <FormatDropdown
-                        value={row.selectedQuality || ''}
-                        formats={sortedQualities}
-                        onChange={(quality) => row.onQualityChange!(quality)}
-                        placeholder="Quality"
-                        title={`Quality: ${row.selectedQuality || 'default'}`}
-                        presorted
-                      />
+                    if (isPending) {
+                      const qualities = row.selectedFormat ? row.file.compatible_formats?.[row.selectedFormat] : undefined
+                      const qualityOrder: Record<string, number> = { low: 0, medium: 1, high: 2 }
+                      const sortedQualities = qualities ? [...qualities].sort((a, b) => (qualityOrder[a] ?? 99) - (qualityOrder[b] ?? 99)) : undefined
+                      return sortedQualities && sortedQualities.length > 0 && row.onQualityChange ? (
+                        <FormatDropdown
+                          value={row.selectedQuality || ''}
+                          formats={sortedQualities}
+                          onChange={(quality) => row.onQualityChange!(quality)}
+                          placeholder="Quality"
+                          title={`Quality: ${row.selectedQuality || 'default'}`}
+                          presorted
+                        />
+                      ) : (
+                        <span className="text-xs text-text-muted">—</span>
+                      )
+                    }
+                    return row.conversion?.quality ? (
+                      <span className="text-xs font-mono uppercase bg-primary/20 px-2 py-0.5 rounded text-primary">
+                        {row.conversion.quality}
+                      </span>
                     ) : (
                       <span className="text-xs text-text-muted">—</span>
                     )

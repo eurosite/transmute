@@ -31,6 +31,7 @@ class ConversionItem(BaseModel):
     extension: str = Field(..., example=".png")
     size_bytes: int = Field(..., example=204800)
     sha256_checksum: str = Field(..., example="abc123def456...")
+    quality: Optional[str] = Field(None, example="medium", description="Quality setting used for this conversion")
     original_file: Optional[FileMetadata] = Field(None, description="Original file metadata")
 
 
