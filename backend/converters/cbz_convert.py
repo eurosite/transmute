@@ -82,8 +82,28 @@ class CBZConverter(ConverterInterface):
         return compatible
 
     def _convert_cbr_to_cbz(self, output_file: str) -> str:
-        comic = ComicInfo.from_cbr(self.input_file)
-        Path(output_file).write_bytes(comic.pack())
+        with tempfile.TemporaryDirectory(dir=get_settings().tmp_dir) as tmp:
+            with rarfile.RarFile(self.input_file, 'r') as rf:
+                self._safe_extract_rar(rf, tmp)
+
+            images = self._collect_images(tmp)
+            if not images:
+                raise RuntimeError("CBR archive contains no supported image files.")
+
+            last_idx = len(images) - 1
+            pages: list[PageInfo] = []
+            for i, img_path in enumerate(images):
+                if i == 0:
+                    page_type = PageType.FRONT_COVER
+                elif i == last_idx:
+                    page_type = PageType.BACK_COVER
+                else:
+                    page_type = PageType.STORY
+                pages.append(PageInfo.load(path=str(img_path), type=page_type))
+
+            comic = ComicInfo.from_pages(pages=pages)
+            Path(output_file).write_bytes(comic.pack())
+
         return output_file
 
     def _convert_pdf_to_cbz(self, output_file: str) -> str:
@@ -105,6 +125,16 @@ class CBZConverter(ConverterInterface):
             if not resolved.startswith(real_dest + os.sep) and resolved != real_dest:
                 raise ValueError(f"Path traversal detected in 7z member: {entry.filename}")
         sz.extractall(path=dest)  # nosec B202
+
+    @staticmethod
+    def _safe_extract_rar(rf: rarfile.RarFile, dest: str) -> None:
+        """Extract a RAR archive, rejecting members with path traversal."""
+        real_dest = os.path.realpath(dest)
+        for entry in rf.infolist():
+            resolved = os.path.realpath(os.path.join(dest, entry.filename))
+            if not resolved.startswith(real_dest + os.sep) and resolved != real_dest:
+                raise ValueError(f"Path traversal detected in RAR member: {entry.filename}")
+        rf.extractall(path=dest)
 
     @staticmethod
     def _collect_images(directory: str) -> list[Path]:
