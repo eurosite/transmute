@@ -35,18 +35,26 @@ function Auth() {
       .catch(() => setOidcConfig({ enabled: false, display_name: '', allow_unauthenticated: false, auto_launch: false }))
   }, [])
 
+  const [suppressAutoLaunch] = useState(() => {
+    if (sessionStorage.getItem('logged_out')) {
+      sessionStorage.removeItem('logged_out')
+      return true
+    }
+    return false
+  })
+
   useEffect(() => {
-    if (oidcConfig?.auto_launch && oidcConfig.enabled && !requiresSetup) {
+    if (oidcConfig?.auto_launch && oidcConfig.enabled && !requiresSetup && !suppressAutoLaunch) {
       window.location.href = '/api/oidc/login'
     }
-  }, [oidcConfig, requiresSetup])
+  }, [oidcConfig, requiresSetup, suppressAutoLaunch])
 
   const returnTo = typeof location.state === 'object' && location.state && 'from' in location.state
     ? String(location.state.from)
     : '/'
 
   // While config is loading or auto-launch redirect is pending, show nothing
-  const autoLaunching = oidcConfig?.auto_launch && oidcConfig.enabled && !requiresSetup
+  const autoLaunching = oidcConfig?.auto_launch && oidcConfig.enabled && !requiresSetup && !suppressAutoLaunch
   if (oidcConfig === null || autoLaunching) {
     return <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(var(--color-primary),0.35),_transparent_38%),linear-gradient(135deg,_rgb(var(--color-surface-dark)),_rgb(var(--color-surface-light))_55%,_rgb(var(--color-surface-dark)))]" />
   }

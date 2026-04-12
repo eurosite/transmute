@@ -70,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStoredToken(null)
     setUser(null)
     setStatus('unauthenticated')
+    sessionStorage.setItem('logged_out', '1')
   }
 
   const replaceUser = (nextUser: AuthUser) => {
