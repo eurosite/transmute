@@ -15,6 +15,7 @@ from .ocrmypdf_convert import OCRmyPDFConverter
 from .inkscape_convert import VectorConverter
 from .cbz_convert import CBZConverter
 from .pkcs7_convert import PKCS7Converter
+from .rename_converter import RenameConverter
 
 __all__ = [
     "FFmpegConverter", 
@@ -33,5 +34,6 @@ __all__ = [
     "VectorConverter",
     "CBZConverter",
     "PKCS7Converter",
+    "RenameConverter",
     "ConverterInterface",
     ]
