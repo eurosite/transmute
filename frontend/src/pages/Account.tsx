@@ -148,11 +148,13 @@ function Account() {
               <span className="mb-2 block text-sm font-medium text-text">{t('fields.fullName')}</span>
               <input value={fullName} onChange={event => setFullName(event.target.value)} className="w-full rounded-lg border border-surface-light bg-surface-dark px-4 py-3 text-sm text-text outline-none focus:ring-2 focus:ring-primary/20" />
             </label>
+            {user.has_usable_password && (
             <label className="block md:col-span-2">
               <span className="mb-2 block text-sm font-medium text-text">{t('fields.newPassword')}</span>
               <PasswordField value={password} onChange={event => setPassword(event.target.value)} inputClassName="rounded-lg border border-surface-light bg-surface-dark px-4 py-3 text-sm text-text outline-none focus:ring-2 focus:ring-primary/20" toggleButtonClassName="rounded-lg border border-surface-light bg-surface-dark px-4 text-text-muted transition hover:bg-primary/20 hover:text-primary-light focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder={t('account.passwordPlaceholder')} minLength={8} />
               <p className="mt-1 text-xs text-text-muted">{t('account.passwordHint')}</p>
             </label>
+            )}
           </div>
 
           <div className="mt-6 flex items-center justify-between gap-4">

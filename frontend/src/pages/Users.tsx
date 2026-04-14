@@ -243,11 +243,13 @@ function Users() {
                       <span className="mb-2 block text-sm font-medium text-text">{t('fields.fullName')}</span>
                       <input value={draft.full_name} onChange={event => updateDraft(user.uuid, 'full_name', event.target.value)} className="w-full rounded-lg border border-surface-light bg-surface-dark px-4 py-3 text-sm text-text outline-none focus:ring-2 focus:ring-primary/20" />
                     </label>
+                    {user.has_usable_password && (
                     <label className="min-w-0">
                       <span className="mb-2 block text-sm font-medium text-text">{t('fields.newPassword')}</span>
                       <PasswordField value={draft.password} onChange={event => updateDraft(user.uuid, 'password', event.target.value)} containerClassName="flex min-w-0 items-stretch gap-2" inputClassName="min-w-0 rounded-lg border border-surface-light bg-surface-dark px-4 py-3 text-sm text-text outline-none focus:ring-2 focus:ring-primary/20" toggleButtonClassName="shrink-0 rounded-lg border border-surface-light bg-surface-dark px-4 text-text-muted transition hover:bg-primary/20 hover:text-primary-light focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder={t('users.passwordPlaceholder')} minLength={8} />
                       <p className="mt-1 text-xs text-text-muted">{t('users.passwordHint')}</p>
                     </label>
+                    )}
                     <label>
                       <span className="mb-2 block text-sm font-medium text-text">{t('fields.role')}</span>
                       <select value={draft.role} onChange={event => updateDraft(user.uuid, 'role', event.target.value)} disabled={currentUser?.uuid === user.uuid} className={`w-full rounded-lg border border-surface-light bg-surface-dark px-4 py-3 text-sm text-text outline-none focus:ring-2 focus:ring-primary/20${currentUser?.uuid === user.uuid ? ' opacity-50 cursor-not-allowed' : ''}`} title={currentUser?.uuid === user.uuid ? t('users.cannotChangeOwnRole') : undefined}>

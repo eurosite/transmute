@@ -11,6 +11,7 @@ export interface AuthUser {
   role: UserRole
   disabled: boolean
   is_guest: boolean
+  has_usable_password: boolean
 }
 
 interface BootstrapStatus {

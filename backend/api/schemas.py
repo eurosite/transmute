@@ -135,6 +135,7 @@ class UserResponse(BaseModel):
     role: UserRoleValue = Field(..., example="member", description="Assigned role")
     disabled: bool = Field(..., example=False, description="Whether the account is disabled")
     is_guest: bool = Field(False, example=False, description="Whether this is a guest account")
+    has_usable_password: bool = Field(True, example=True, description="Whether the account has a local password (false for OIDC-only accounts)")
 
 
 class UserListResponse(BaseModel):

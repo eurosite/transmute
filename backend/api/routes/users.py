@@ -27,6 +27,8 @@ from db import UserDB, ApiKeyDB, FileDB, ConversionDB, ConversionRelationsDB, Se
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+_UNUSABLE_PASSWORDS = frozenset({"!oidc-no-password", "!guest-no-password"})
+
 
 @router.get(
     "/bootstrap-status",
@@ -54,6 +56,7 @@ def _serialize_user(user: dict) -> dict:
         "role": user["role"],
         "disabled": user["disabled"],
         "is_guest": user.get("is_guest", False),
+        "has_usable_password": user.get("hashed_password", "") not in _UNUSABLE_PASSWORDS,
     }
 
 
@@ -291,6 +294,8 @@ def update_me(
     if "username" in payload and db.username_exists(payload["username"], exclude_uuid=current_user["uuid"]):
         raise HTTPException(status_code=409, detail=f"Username '{payload['username']}' already exists")
     if "password" in payload:
+        if current_user.get("hashed_password") in _UNUSABLE_PASSWORDS:
+            raise HTTPException(status_code=403, detail="Password changes are not allowed for externally managed accounts")
         payload["hashed_password"] = get_password_hash_str(payload.pop("password"))
 
     try:
@@ -341,6 +346,9 @@ def update_user(
     if "username" in payload and db.username_exists(payload["username"], exclude_uuid=user_uuid):
         raise HTTPException(status_code=409, detail=f"Username '{payload['username']}' already exists")
     if "password" in payload:
+        target_user = db.get_user(user_uuid)
+        if target_user and target_user.get("hashed_password") in _UNUSABLE_PASSWORDS:
+            raise HTTPException(status_code=403, detail="Password changes are not allowed for externally managed accounts")
         payload["hashed_password"] = get_password_hash_str(payload.pop("password"))
 
     # Prevent admins from demoting themselves
