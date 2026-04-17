@@ -4,8 +4,8 @@
     "tagline": "Arrastra un archivo, selecciona un formato, Transmute."
   },
   "titles": {
-    "signIn": "Transmute - Registrarse",
-    "converter": "Transmute - Transformador",
+    "signIn": "Transmute - Iniciar Sesión",
+    "converter": "Transmute - Convertidor",
     "files": "Transmute - Archivos",
     "history": "Transmute - Historial",
     "settings": "Transmute - Ajustes",
@@ -17,7 +17,7 @@
     "convert": "Convertir",
     "files": "Archivos",
     "history": "Historial",
-    "converter": "Transformador",
+    "converter": "Convertidor",
     "logo": "Transmute Logo"
   },
   "menu": {
@@ -30,8 +30,8 @@
   },
   "auth": {
     "logIn": "Iniciar Sesión",
-    "signIn": "Registrarse",
-    "signInWith": "Registrarse con {{provider}}",
+    "signIn": "Iniciar Sesión",
+    "signInWith": "Iniciar sesión con {{provider}}",
     "bootstrapWith": "Bootstrap con {{provider}}",
     "useLocalAccount": "Usar cuenta local",
     "useAsGuest": "Usar como Invitado",
@@ -207,7 +207,7 @@
     "deleteFailed": "Error al eliminar usuario",
     "deleteSelfBlocked": "No se puede eliminar la cuenta del administrador que tiene la sesión iniciada desde esta pantalla.",
     "deleted": "Usuario eliminado exitosamente.",
-    "cannotChangeOwnRole": "Tú no puedes eliminar tu propio rol",
+    "cannotChangeOwnRole": "No puedes cambiar tu propio rol",
     "member": "Miembro",
     "admin": "Administrador",
     "passwordHint": "Mínimo 8 caracteres si lo modificas.",
