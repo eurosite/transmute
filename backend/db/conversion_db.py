@@ -1,6 +1,4 @@
-import sqlite3
-
-from core import get_settings, migrate_table_columns, assign_orphaned_rows_to_admin
+from core import get_settings, migrate_table_columns
 from .file_db import FileDB
 
 
@@ -24,13 +22,18 @@ class ConversionDB(FileDB):
     def __init__(self) -> None:
         """Initialize ConversionDB and create the conversions table."""
         super().__init__()
+        self._ensure_quality_column()
+
+    def _ensure_quality_column(self) -> None:
+        """Ensure the conversion metadata table has the optional quality column."""
+        migrate_table_columns(self.conn, self.TABLE_NAME, {
+            "quality": "TEXT",
+        })
 
     def create_tables(self) -> None:
         """Create the conversion metadata table with the quality column."""
         super().create_tables()
-        migrate_table_columns(self.conn, self.TABLE_NAME, {
-            "quality": "TEXT",
-        })
+        self._ensure_quality_column()
 
     def insert_file_metadata(self, metadata: dict) -> None:
         """Insert a new conversion file metadata record, including optional quality."""
