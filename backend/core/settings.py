@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -75,6 +75,18 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"  # nosec B104
     port: int = 3313
     api_server_url: str | None = None
+
+    @field_validator("oidc_issuer_url", "oidc_internal_url", "app_url", mode="before")
+    @classmethod
+    def _normalize_url_env(cls, value: str) -> str:
+        """Strip whitespace and accidental surrounding quotes from URL settings."""
+        if not isinstance(value, str):
+            return value
+
+        normalized = value.strip()
+        if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in {'"', "'"}:
+            normalized = normalized[1:-1].strip()
+        return normalized
 
     def model_post_init(self, __context):
         """Compute derived paths after initialization."""

@@ -51,6 +51,20 @@ def test_api_server_url_from_app_url(tmp_path):
     assert s.api_server_url == "https://example.com"
 
 
+def test_quoted_url_settings_are_normalized(tmp_path):
+    s = Settings(
+        data_dir=tmp_path / "data",
+        app_url='  "https://transmute.example.com"  ',
+        oidc_issuer_url='"https://idp.example.com/application/o/transmute/"',
+        oidc_internal_url="'https://idp.internal/application/o/transmute/'",
+    )
+
+    assert s.app_url == "https://transmute.example.com"
+    assert s.api_server_url == "https://transmute.example.com"
+    assert s.oidc_issuer_url == "https://idp.example.com/application/o/transmute/"
+    assert s.oidc_internal_url == "https://idp.internal/application/o/transmute/"
+
+
 def test_get_settings_returns_same_instance():
     get_settings.cache_clear()
     try:
