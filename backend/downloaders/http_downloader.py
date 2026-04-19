@@ -12,8 +12,6 @@ from .downloader_interface import DownloaderInterface, DownloadResult, DownloadE
 logger = logging.getLogger(__name__)
 
 TIMEOUT_SECONDS = 300
-MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB
-
 
 class HttpDownloader(DownloaderInterface):
     """Downloads files over plain HTTP/HTTPS."""
@@ -45,9 +43,6 @@ class HttpDownloader(DownloaderInterface):
                     with file_path.open("wb") as buffer:
                         async for chunk in response.aiter_bytes(chunk_size=1024 * 1024):
                             size_bytes += len(chunk)
-                            if size_bytes > MAX_DOWNLOAD_BYTES:
-                                file_path.unlink(missing_ok=True)
-                                raise DownloadError("Downloaded file exceeds maximum allowed size")
                             buffer.write(chunk)
                             hasher.update(chunk)
         except DownloadError:
