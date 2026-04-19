@@ -5,6 +5,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import en from './en.json'
 import de from './de.json'
 import es from './es.json'
+import pl from './pl.json'
 
 const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 
@@ -16,6 +17,7 @@ i18n
       en: { translation: en },
       de: { translation: de },
       es: { translation: es },
+      pl: { translation: pl },
     },
     fallbackLng: 'en',
     interpolation: {
