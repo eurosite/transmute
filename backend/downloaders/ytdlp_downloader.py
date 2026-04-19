@@ -1,4 +1,5 @@
 import hashlib
+from functools import lru_cache
 import logging
 import os
 import re
@@ -6,29 +7,31 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import yt_dlp
+from yt_dlp.extractor import gen_extractors
 
 from .downloader_interface import DownloaderInterface, DownloadResult, DownloadError
 
 logger = logging.getLogger(__name__)
 
-_YOUTUBE_HOSTS = {
-    "youtube.com",
-    "www.youtube.com",
-    "youtu.be",
-    "music.youtube.com",
-    "m.youtube.com",
-}
+
+@lru_cache(maxsize=1)
+def _site_specific_extractors() -> tuple[object, ...]:
+    """Return yt-dlp extractors, excluding the generic catch-all extractor."""
+    return tuple(
+        extractor
+        for extractor in gen_extractors()
+        if getattr(extractor, "IE_NAME", "").lower() != "generic"
+    )
 
 
 class YtDlpDownloader(DownloaderInterface):
-    """Downloads media from YouTube URLs using yt-dlp."""
+    """Downloads media from site-specific yt-dlp supported URLs."""
 
     def can_handle(self, url: str) -> bool:
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https"):
             return False
-        hostname = parsed.hostname
-        return hostname is not None and hostname.lower() in _YOUTUBE_HOSTS
+        return any(extractor.suitable(url) for extractor in _site_specific_extractors())
 
     async def download(self, url: str, dest_dir: Path, filename_stem: str) -> DownloadResult:
         os.makedirs(dest_dir, exist_ok=True)
@@ -61,7 +64,7 @@ class YtDlpDownloader(DownloaderInterface):
                 info = ydl.extract_info(url, download=True)
         except yt_dlp.utils.DownloadError as exc:
             logger.warning("yt-dlp download failed for %s: %s", url, exc)
-            raise DownloadError(f"Failed to download from YouTube: {exc}")
+            raise DownloadError(f"Failed to download from supported site: {exc}")
 
         if info is None:
             raise DownloadError("yt-dlp returned no info for the given URL")
