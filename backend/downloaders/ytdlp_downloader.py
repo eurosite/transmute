@@ -32,15 +32,23 @@ class YtDlpDownloader(DownloaderInterface):
 
     async def download(self, url: str, dest_dir: Path, filename_stem: str) -> DownloadResult:
         os.makedirs(dest_dir, exist_ok=True)
+        download_status = {"status": "unknown"}
 
         # Use the UUID stem as the output template so filenames are predictable.
         # yt-dlp will append the extension based on the container format.
         output_template = str(dest_dir / f"{filename_stem}.%(ext)s")
 
+        def _record_download_status(progress: dict) -> None:
+            status = progress.get("status")
+            if status:
+                download_status["status"] = status
+
         ydl_opts = {
             "outtmpl": output_template,
             "quiet": True,
             "no_warnings": True,
+            "noprogress": True,
+            "progress_hooks": [_record_download_status],
             # Best single-file format — avoids needing ffmpeg to merge
             "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "merge_output_format": "mp4",
@@ -66,6 +74,13 @@ class YtDlpDownloader(DownloaderInterface):
         original_title = info.get("title", "video")
         ext = downloaded_path.suffix  # includes the dot
         original_filename = _safe_original_filename(original_title, ext)
+        logger.info(
+            "yt-dlp download: url=%s status=%s extractor=%s output=%s",
+            url,
+            download_status["status"],
+            info.get("extractor_key", "unknown"),
+            downloaded_path.name,
+        )
 
         size_bytes = downloaded_path.stat().st_size
         if size_bytes == 0:
