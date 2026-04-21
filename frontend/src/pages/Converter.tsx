@@ -274,38 +274,51 @@ function Converter() {
       }
 
       const data = await response.json()
-      const fileInfo: FileInfo = {
-        id: data.metadata.id,
-        original_filename: data.metadata.original_filename,
-        media_type: data.metadata.media_type,
-        extension: data.metadata.extension,
-        size_bytes: data.metadata.size_bytes,
-        created_at: data.metadata.created_at,
-        compatible_formats: data.metadata.compatible_formats,
-      }
-
-      const sortedFormats = fileInfo.compatible_formats
-        ? Object.keys(fileInfo.compatible_formats).sort()
+      // Endpoint returns a list of files — a single URL may resolve to
+      // multiple files (e.g. a playlist).
+      const uploadedFiles: FileInfo[] = Array.isArray(data.files)
+        ? data.files.map((meta: FileInfo) => ({
+            id: meta.id,
+            original_filename: meta.original_filename,
+            media_type: meta.media_type,
+            extension: meta.extension,
+            size_bytes: meta.size_bytes,
+            created_at: meta.created_at,
+            compatible_formats: meta.compatible_formats,
+          }))
         : []
-      const inputExt = fileInfo.extension?.replace(/^\./,  '') || fileInfo.media_type || ''
-      const normalizedExt = formatAliases[inputExt] || inputExt
-      const userDefault = defaultFormats[normalizedExt] || defaultFormats[inputExt]
-      const defaultFormat = (userDefault && sortedFormats.includes(userDefault))
-        ? userDefault
-        : sortedFormats[0] || ''
 
-      const qualities = (defaultFormat && fileInfo.compatible_formats?.[defaultFormat]) || []
-      const defaultQualityForFormat = defaultQualities[defaultFormat]
-      const pending: PendingFile = {
-        file: fileInfo,
-        selectedFormat: defaultFormat,
-        selectedQuality: qualities.length > 0
-          ? (defaultQualityForFormat && qualities.includes(defaultQualityForFormat) ? defaultQualityForFormat : (qualities.includes('medium') ? 'medium' : undefined))
-          : undefined,
-        status: 'pending',
+      if (uploadedFiles.length === 0) {
+        setIgnoredUploadCount(1)
+        return
       }
 
-      setPendingFiles((prev) => [...prev, pending])
+      setUploadCount(uploadedFiles.length)
+
+      const pendings: PendingFile[] = uploadedFiles.map((fileInfo) => {
+        const sortedFormats = fileInfo.compatible_formats
+          ? Object.keys(fileInfo.compatible_formats).sort()
+          : []
+        const inputExt = fileInfo.extension?.replace(/^\./, '') || fileInfo.media_type || ''
+        const normalizedExt = formatAliases[inputExt] || inputExt
+        const userDefault = defaultFormats[normalizedExt] || defaultFormats[inputExt]
+        const defaultFormat = (userDefault && sortedFormats.includes(userDefault))
+          ? userDefault
+          : sortedFormats[0] || ''
+
+        const qualities = (defaultFormat && fileInfo.compatible_formats?.[defaultFormat]) || []
+        const defaultQualityForFormat = defaultQualities[defaultFormat]
+        return {
+          file: fileInfo,
+          selectedFormat: defaultFormat,
+          selectedQuality: qualities.length > 0
+            ? (defaultQualityForFormat && qualities.includes(defaultQualityForFormat) ? defaultQualityForFormat : (qualities.includes('medium') ? 'medium' : undefined))
+            : undefined,
+          status: 'pending',
+        }
+      })
+
+      setPendingFiles((prev) => [...prev, ...pendings])
       setUrlInput('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'URL upload failed')

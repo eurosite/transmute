@@ -8,6 +8,8 @@ def _normalize_converter_media_type(media_type: str) -> str:
     normalized = media_type.lower()
     if normalized == "webvideo":
         return "mp4"
+    if normalized == "webaudio":
+        return "m4a"
     return media_type_aliases.get(normalized, normalized)
 
 class ConverterInterface:

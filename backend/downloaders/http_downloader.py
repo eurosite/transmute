@@ -29,7 +29,7 @@ class HttpDownloader(DownloaderInterface):
             normalized = normalized.replace("github.com", "raw.githubusercontent.com", count=1).replace("/blob/", "/", count=1)
         return normalized
 
-    async def download(self, url: str, dest_dir: Path, filename_stem: str) -> DownloadResult:
+    async def download(self, url: str, dest_dir: Path, filename_stem: str) -> list[DownloadResult]:
         url = self.fix_url(url)
         original_filename = _extract_filename_from_url(url)
         file_extension = get_file_extension(original_filename)
@@ -66,12 +66,13 @@ class HttpDownloader(DownloaderInterface):
             file_path.unlink(missing_ok=True)
             raise DownloadError("Downloaded file is empty")
 
-        return DownloadResult(
+        return [DownloadResult(
+            id=filename_stem,
             file_path=file_path,
             original_filename=original_filename,
             size_bytes=size_bytes,
             sha256_checksum=hasher.hexdigest(),
-        )
+        )]
 
 
 def _extract_filename_from_url(url: str) -> str:

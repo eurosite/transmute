@@ -10,6 +10,14 @@ from api.deps import get_current_active_user, get_file_db, get_conversion_db, ge
 from api.schemas import ConversionRequest, ConversionListResponse, FileMetadata, ErrorResponse, FileDeleteResponse
 
 
+# Synthetic input formats produced by URL downloaders that pass straight
+# through to a real base format without re-encoding (see registry.WEB_ALIAS_BASE_FORMATS).
+WEB_ALIAS_PASSTHROUGH: dict[str, str] = {
+    "webvideo": "mp4",
+    "webaudio": "m4a",
+}
+
+
 router = APIRouter(prefix="/conversions", tags=["conversions"])
 settings = get_settings()
 UPLOAD_DIR = settings.upload_dir
@@ -17,11 +25,19 @@ TEMP_DIR = settings.tmp_dir
 CONVERTED_DIR = settings.output_dir
 
 
-def copy_webvideo_to_mp4(input_path: str, temp_dir: Path, converted_id: str) -> list[str]:
-    """Copy a yt-dlp-backed webvideo to an mp4 output without re-encoding."""
-    output_path = temp_dir / f"{converted_id}.mp4"
+def copy_web_alias_to_base(input_path: str, temp_dir: Path, converted_id: str, output_format: str) -> list[str]:
+    """Copy a downloader-backed web alias file to its base format without re-encoding."""
+    output_path = temp_dir / f"{converted_id}.{output_format}"
     shutil.copy2(input_path, output_path)
     return [str(output_path)]
+
+
+def copy_webvideo_to_mp4(input_path: str, temp_dir: Path, converted_id: str) -> list[str]:
+    """Copy a yt-dlp-backed webvideo to an mp4 output without re-encoding.
+
+    Kept for backwards compatibility with tests and external callers.
+    """
+    return copy_web_alias_to_base(input_path, temp_dir, converted_id, "mp4")
 
 
 @router.get(
@@ -124,8 +140,9 @@ def create_conversion(
         if default_quality:
             quality = default_quality["quality"]
     try:
-        if input_format == "webvideo" and output_format == "mp4":
-            output_files = copy_webvideo_to_mp4(og_metadata['storage_path'], Path(TEMP_DIR), converted_id)
+        passthrough_base = WEB_ALIAS_PASSTHROUGH.get(input_format)
+        if passthrough_base is not None and output_format == passthrough_base:
+            output_files = copy_web_alias_to_base(og_metadata['storage_path'], Path(TEMP_DIR), converted_id, output_format)
         else:
             output_files = converter.convert(quality=quality)
     except Exception as e:

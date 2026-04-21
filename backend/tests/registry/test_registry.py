@@ -100,8 +100,11 @@ def test_get_formats_returns_union(stub_registry):
         | _ImageConverter.supported_output_formats
         | _AudioConverter.supported_input_formats
         | _AudioConverter.supported_output_formats
+        | _VideoConverter.supported_input_formats
+        | _VideoConverter.supported_output_formats
     )
     assert fmts == expected
+    assert "webvideo" not in fmts
 
 
 def test_get_formats_empty(empty_registry):

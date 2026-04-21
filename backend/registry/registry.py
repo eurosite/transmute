@@ -7,6 +7,17 @@ import converters
 
 WEBVIDEO_FORMAT = "webvideo"
 WEBVIDEO_BASE_FORMAT = "mp4"
+WEBAUDIO_FORMAT = "webaudio"
+WEBAUDIO_BASE_FORMAT = "m4a"
+
+# Synthetic input media types produced by URL downloaders (e.g. yt-dlp), each
+# mapped to the real format they pass through to. Conversions advertised for
+# a web alias are the same as those advertised for its base format, plus a
+# trivial passthrough to the base format itself.
+WEB_ALIAS_BASE_FORMATS: dict[str, str] = {
+    WEBVIDEO_FORMAT: WEBVIDEO_BASE_FORMAT,
+    WEBAUDIO_FORMAT: WEBAUDIO_BASE_FORMAT,
+}
 
 
 class ConverterRegistry:
@@ -49,10 +60,11 @@ class ConverterRegistry:
                 if fmt not in self.input_format_map:
                     self.input_format_map[fmt] = []
                 self.input_format_map[fmt].append(converter_class)
-                if fmt == WEBVIDEO_BASE_FORMAT:
-                    if WEBVIDEO_FORMAT not in self.input_format_map:
-                        self.input_format_map[WEBVIDEO_FORMAT] = []
-                    self.input_format_map[WEBVIDEO_FORMAT].append(converter_class)
+                for alias_format, base_format in WEB_ALIAS_BASE_FORMATS.items():
+                    if fmt == base_format:
+                        if alias_format not in self.input_format_map:
+                            self.input_format_map[alias_format] = []
+                        self.input_format_map[alias_format].append(converter_class)
         # Map supported formats to this converter
         if hasattr(converter_class, 'supported_output_formats'):
             for fmt in converter_class.supported_output_formats:
@@ -79,7 +91,11 @@ class ConverterRegistry:
         Returns:
             Set of supported format strings
         """
-        return set(self.input_format_map.keys()) | set(self.output_format_map.keys())
+        formats: set[str] = set()
+        for converter_class in self.converters.values():
+            formats.update(getattr(converter_class, 'supported_input_formats', set()))
+            formats.update(getattr(converter_class, 'supported_output_formats', set()))
+        return formats
     
     def get_normalized_format(self, format_type) -> str:
         """
@@ -188,7 +204,8 @@ class ConverterRegistry:
             Dictionary mapping compatible format strings to their available quality options
         """
         normalized_format = self.get_normalized_format(format_type)
-        compatibility_input_format = WEBVIDEO_BASE_FORMAT if normalized_format == WEBVIDEO_FORMAT else format_type
+        alias_base_format = WEB_ALIAS_BASE_FORMATS.get(normalized_format)
+        compatibility_input_format = alias_base_format if alias_base_format else format_type
         compatible = dict()
         
         # Find all converters that support this format
@@ -208,12 +225,12 @@ class ConverterRegistry:
                     compatible[compatible_format].update(converter_class.get_quality_options())
 
             if (
-                normalized_format == WEBVIDEO_FORMAT
-                and WEBVIDEO_BASE_FORMAT in getattr(converter_class, 'supported_output_formats', set())
+                alias_base_format is not None
+                and alias_base_format in getattr(converter_class, 'supported_output_formats', set())
             ):
-                compatible.setdefault(WEBVIDEO_BASE_FORMAT, set())
-                if WEBVIDEO_BASE_FORMAT in converter_class.get_formats_with_quality_options():
-                    compatible[WEBVIDEO_BASE_FORMAT].update(converter_class.get_quality_options())
+                compatible.setdefault(alias_base_format, set())
+                if alias_base_format in converter_class.get_formats_with_quality_options():
+                    compatible[alias_base_format].update(converter_class.get_quality_options())
         return compatible
     
     def get_format_compatibility_matrix(self) -> dict[str, set[str]]:

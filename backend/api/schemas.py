@@ -84,6 +84,11 @@ class FileUploadResponse(BaseModel):
     metadata: FileMetadataWithFormats = Field(..., description="Uploaded file metadata with compatible formats")
 
 
+class FileUrlUploadResponse(BaseModel):
+    message: str = Field(..., example="File uploaded successfully", description="Upload status message")
+    files: list[FileMetadataWithFormats] = Field(..., description="Metadata for every file retrieved from the URL. A single URL may resolve to multiple files (e.g. a playlist).")
+
+
 class FileDeleteResponse(BaseModel):
     message: str = Field(..., example="File deleted successfully", description="Deletion status message")
 
