@@ -24,6 +24,16 @@ class _AudioConverter(ConverterInterface):
         return True
 
 
+class _VideoConverter(ConverterInterface):
+    supported_input_formats = {"mp4", "avi"}
+    supported_output_formats = {"mp4", "avi", "mp3"}
+    formats_with_qualities = {"mp4", "avi"}
+
+    @classmethod
+    def can_register(cls) -> bool:
+        return True
+
+
 class _UnregisterableConverter(ConverterInterface):
     supported_input_formats = {"xyz"}
     supported_output_formats = {"abc"}
@@ -48,6 +58,7 @@ def stub_registry(empty_registry):
     """A registry pre-loaded with the two stub converters."""
     empty_registry.register_converter(_ImageConverter)
     empty_registry.register_converter(_AudioConverter)
+    empty_registry.register_converter(_VideoConverter)
     return empty_registry
 
 
@@ -129,6 +140,11 @@ def test_converters_for_input_format_unknown(stub_registry):
     assert stub_registry.get_converters_for_input_format("xyz123") == []
 
 
+def test_converters_for_webvideo_input(stub_registry):
+    result = stub_registry.get_converters_for_input_format("webvideo")
+    assert _VideoConverter in result
+
+
 # ── get_converters_for_output_format ─────────────────────────────────
 
 def test_converters_for_output_format(stub_registry):
@@ -150,6 +166,11 @@ def test_converter_for_conversion_found(stub_registry):
 def test_converter_for_conversion_alias_input(stub_registry):
     conv = stub_registry.get_converter_for_conversion("jpg", "webp")
     assert conv is _ImageConverter
+
+
+def test_converter_for_conversion_webvideo_input(stub_registry):
+    conv = stub_registry.get_converter_for_conversion("webvideo", "mp3")
+    assert conv is _VideoConverter
 
 
 def test_converter_for_conversion_none(stub_registry):
@@ -187,6 +208,18 @@ def test_compatible_formats_quality_options(stub_registry):
     assert len(compat["jpeg"]) > 0
     # gif is NOT in formats_with_qualities
     assert compat["gif"] == set()
+
+
+def test_webvideo_compatible_formats_include_mp4(stub_registry):
+    compat = stub_registry.get_compatible_formats_and_qualities("webvideo")
+    assert "mp4" in compat
+    assert "avi" in compat
+    assert "mp3" in compat
+
+
+def test_webvideo_mp4_quality_options(stub_registry):
+    compat = stub_registry.get_compatible_formats_and_qualities("webvideo")
+    assert len(compat["mp4"]) > 0
 
 
 def test_compatible_formats_unknown_input(stub_registry):

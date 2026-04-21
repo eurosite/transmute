@@ -5,6 +5,10 @@ from converters import ConverterInterface
 import converters
 
 
+WEBVIDEO_FORMAT = "webvideo"
+WEBVIDEO_BASE_FORMAT = "mp4"
+
+
 class ConverterRegistry:
     """
     Registry for managing available converters.
@@ -45,6 +49,10 @@ class ConverterRegistry:
                 if fmt not in self.input_format_map:
                     self.input_format_map[fmt] = []
                 self.input_format_map[fmt].append(converter_class)
+                if fmt == WEBVIDEO_BASE_FORMAT:
+                    if WEBVIDEO_FORMAT not in self.input_format_map:
+                        self.input_format_map[WEBVIDEO_FORMAT] = []
+                    self.input_format_map[WEBVIDEO_FORMAT].append(converter_class)
         # Map supported formats to this converter
         if hasattr(converter_class, 'supported_output_formats'):
             for fmt in converter_class.supported_output_formats:
@@ -180,6 +188,7 @@ class ConverterRegistry:
             Dictionary mapping compatible format strings to their available quality options
         """
         normalized_format = self.get_normalized_format(format_type)
+        compatibility_input_format = WEBVIDEO_BASE_FORMAT if normalized_format == WEBVIDEO_FORMAT else format_type
         compatible = dict()
         
         # Find all converters that support this format
@@ -192,11 +201,19 @@ class ConverterRegistry:
             if not hasattr(converter_class, 'get_formats_compatible_with'):
                 continue
             
-            for compatible_format in converter_class.get_formats_compatible_with(format_type):
+            for compatible_format in converter_class.get_formats_compatible_with(compatibility_input_format):
                 if compatible_format not in compatible:
                     compatible[compatible_format] = set()
                 if compatible_format in converter_class.get_formats_with_quality_options():
                     compatible[compatible_format].update(converter_class.get_quality_options())
+
+            if (
+                normalized_format == WEBVIDEO_FORMAT
+                and WEBVIDEO_BASE_FORMAT in getattr(converter_class, 'supported_output_formats', set())
+            ):
+                compatible.setdefault(WEBVIDEO_BASE_FORMAT, set())
+                if WEBVIDEO_BASE_FORMAT in converter_class.get_formats_with_quality_options():
+                    compatible[WEBVIDEO_BASE_FORMAT].update(converter_class.get_quality_options())
         return compatible
     
     def get_format_compatibility_matrix(self) -> dict[str, set[str]]:

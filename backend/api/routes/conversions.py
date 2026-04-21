@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from converters import ConverterInterface
@@ -14,6 +15,13 @@ settings = get_settings()
 UPLOAD_DIR = settings.upload_dir
 TEMP_DIR = settings.tmp_dir
 CONVERTED_DIR = settings.output_dir
+
+
+def copy_webvideo_to_mp4(input_path: str, temp_dir: Path, converted_id: str) -> list[str]:
+    """Copy a yt-dlp-backed webvideo to an mp4 output without re-encoding."""
+    output_path = temp_dir / f"{converted_id}.mp4"
+    shutil.copy2(input_path, output_path)
+    return [str(output_path)]
 
 
 @router.get(
@@ -116,7 +124,10 @@ def create_conversion(
         if default_quality:
             quality = default_quality["quality"]
     try:
-        output_files = converter.convert(quality=quality)
+        if input_format == "webvideo" and output_format == "mp4":
+            output_files = copy_webvideo_to_mp4(og_metadata['storage_path'], Path(TEMP_DIR), converted_id)
+        else:
+            output_files = converter.convert(quality=quality)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Conversion failed: {str(e)}")
     moved_output_file = Path(output_files[0]).rename(f'{CONVERTED_DIR}/{converted_id}{output_extension}')

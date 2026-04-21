@@ -14,7 +14,7 @@ from registry import registry as converter_registry
 from api.deps import get_current_active_user, get_file_db, get_conversion_db
 from api.schemas import FileListResponse, FileUploadResponse, FileDeleteResponse, ErrorResponse, BatchDownloadRequest, UrlUploadRequest
 from registry import downloader_registry
-from downloaders import DownloadError
+from downloaders import DownloadError, YtDlpDownloader
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,13 @@ settings = get_settings()
 UPLOAD_DIR = settings.upload_dir
 CONVERTED_DIR = settings.output_dir
 TMP_DIR = settings.tmp_dir
+
+
+def resolve_downloaded_media_type(downloader: object, detected_media_type: str) -> str:
+    """Map downloader-specific sources to the stored input media type."""
+    if isinstance(downloader, YtDlpDownloader):
+        return "webvideo"
+    return detected_media_type
 
 
 def build_zip_entry_name(file_metadata: dict, is_converted_file: bool) -> str:
@@ -157,7 +164,7 @@ async def save_file_from_url(url: str, db: FileDB, user_id: str) -> dict:
         raise HTTPException(status_code=exc.status_code, detail=str(exc))
 
     file_extension = get_file_extension(result.original_filename)
-    media_type = detect_media_type(result.file_path)
+    media_type = resolve_downloaded_media_type(downloader, detect_media_type(result.file_path))
 
     compatible_formats = converter_registry.get_compatible_formats_and_qualities(media_type)
     if not compatible_formats:
@@ -243,8 +250,9 @@ def get_file(
             file_path = Path(metadata['storage_path'])
             # Validate path before serving
             validate_safe_path(file_path, raise_exception=True)
-            # media_type in DB is an extension (e.g. "svg"), convert to MIME
-            ext = metadata['media_type']
+            # Use the stored extension when present so synthetic input types
+            # like webvideo still download with the correct MIME type.
+            ext = sanitize_extension(metadata.get('extension') or metadata['media_type'])
             mime_type = mimetypes.guess_type(f"file.{ext}")[0] or "application/octet-stream"
             return FileResponse(
                 path=file_path,
