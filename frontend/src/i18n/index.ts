@@ -7,6 +7,7 @@ import de from './de.json'
 import es from './es.json'
 import pl from './pl.json'
 import it from './it.json'
+import da from './da.json'
 
 const isTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 
@@ -20,6 +21,7 @@ i18n
       es: { translation: es },
       pl: { translation: pl },
       it: { translation: it },
+      da: { translation: da },
     },
     fallbackLng: 'en',
     interpolation: {
