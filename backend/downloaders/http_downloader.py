@@ -6,7 +6,7 @@ from urllib.parse import urlparse, unquote
 
 import httpx
 
-from core import sanitize_filename, get_file_extension
+from core import sanitize_filename, get_file_extension, get_domain_auth_for_url
 from .downloader_interface import DownloaderInterface, DownloadResult, DownloadError
 
 logger = logging.getLogger(__name__)
@@ -43,8 +43,17 @@ class HttpDownloader(DownloaderInterface):
         hasher = hashlib.sha256()
         size_bytes = 0
 
+        domain_auth = get_domain_auth_for_url(url)
+        client_kwargs: dict = {"follow_redirects": True, "timeout": TIMEOUT_SECONDS}
+        if domain_auth is not None:
+            if domain_auth.auth is not None:
+                client_kwargs["auth"] = domain_auth.auth
+            if domain_auth.headers:
+                client_kwargs["headers"] = domain_auth.headers
+            logger.debug("Applying configured domain auth for %s", domain_auth.domain)
+
         try:
-            async with httpx.AsyncClient(follow_redirects=True, timeout=TIMEOUT_SECONDS) as client:
+            async with httpx.AsyncClient(**client_kwargs) as client:
                 async with client.stream("GET", url) as response:
                     if response.status_code != 200:
                         raise DownloadError(

@@ -1,5 +1,6 @@
 # App directories
 data/
+domain_auth/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

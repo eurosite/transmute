@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     # ===== Storage =====
 
     data_dir: Path = Field(default=Path("data"))
+    domain_auth_config_path: Path = Field(default=Path("domain_auth/config.json"))
     web_dir: Path = Field(default=Path("frontend/dist"))
 
     # Derived paths (computed automatically)
