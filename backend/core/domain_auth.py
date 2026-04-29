@@ -148,8 +148,15 @@ def _load_entries(path: Path) -> list[DomainAuth]:
     return entries
 
 
-@lru_cache(maxsize=1)
-def _cached_entries(path_str: str) -> tuple[DomainAuth, ...]:
+def _config_version(path: Path) -> int | None:
+    try:
+        return path.stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+@lru_cache(maxsize=8)
+def _cached_entries(path_str: str, version: int | None) -> tuple[DomainAuth, ...]:
     return tuple(_load_entries(Path(path_str)))
 
 
@@ -160,7 +167,8 @@ def get_domain_auth_for_url(url: str) -> DomainAuth | None:
         return None
 
     settings = get_settings()
-    entries = _cached_entries(str(settings.domain_auth_config_path))
+    config_path = settings.domain_auth_config_path
+    entries = _cached_entries(str(config_path), _config_version(config_path))
     if not entries:
         return None
 
