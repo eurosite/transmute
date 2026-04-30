@@ -1014,6 +1014,7 @@ function Converter() {
                 isPending={true}
                 showDate={false}
                 showStatus={true}
+                alwaysShowQuality={true}
                 converting={submittingJobs}
                 bulkFormats={convertableFiles.length > 1 ? commonFormats : undefined}
                 bulkQualities={convertableFiles.length > 1 ? commonQualities : undefined}

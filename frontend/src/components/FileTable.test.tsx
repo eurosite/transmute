@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import FileTable, { formatFileSize, type FileTableRow } from './FileTable'
 
@@ -66,5 +66,44 @@ describe('FileTable', () => {
     expect(screen.getByText('report.docx')).toBeInTheDocument()
     expect(screen.getAllByText('4.0 KB').length).toBeGreaterThan(0)
     expect(screen.getByText('docx')).toBeInTheDocument()
+  })
+
+  it('renders quality descriptions only inside the open dropdown', () => {
+    render(
+      <FileTable
+        isPending
+        rows={[
+          {
+            ...rows[0],
+            selectedFormat: 'mp4',
+            selectedQuality: 'medium',
+            onQualityChange: () => {},
+            file: {
+              ...rows[0].file,
+              compatible_formats: {
+                mp4: ['low', 'medium', 'high'],
+              },
+            },
+          },
+        ]}
+      />,
+    )
+
+    const lowDescription = 'Smaller file size, fast conversion speed, poor quality'
+    const mediumDescription = 'Medium file size, medium conversion speed, decent quality'
+    const highDescription = 'Large file size, slow conversion speed, high quality'
+
+    // Descriptions are not visible while the dropdown is closed.
+    expect(screen.queryByText(lowDescription)).not.toBeInTheDocument()
+    expect(screen.queryByText(mediumDescription)).not.toBeInTheDocument()
+    expect(screen.queryByText(highDescription)).not.toBeInTheDocument()
+
+    // Open the quality dropdown via its trigger.
+    const trigger = screen.getByTitle('Quality: medium')
+    fireEvent.click(trigger)
+
+    expect(screen.getByText(lowDescription)).toBeInTheDocument()
+    expect(screen.getByText(mediumDescription)).toBeInTheDocument()
+    expect(screen.getByText(highDescription)).toBeInTheDocument()
   })
 })

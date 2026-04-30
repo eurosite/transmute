@@ -270,6 +270,11 @@
     "setFormatAll": "Set format for all files",
     "setQualityAll": "Set quality for all files",
     "all": "All",
+    "qualityDescriptions": {
+      "low": "Smaller file size, fast conversion speed, poor quality",
+      "medium": "Medium file size, medium conversion speed, decent quality",
+      "high": "Large file size, slow conversion speed, high quality"
+    },
     "noMatches": "No matches",
     "status": "Status",
     "cancel": "Cancel",

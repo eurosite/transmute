@@ -55,6 +55,7 @@ interface FileTableProps {
   showCheckbox?: boolean
   showDate?: boolean
   showStatus?: boolean
+  alwaysShowQuality?: boolean
   selectedIds?: Set<string>
   onToggleSelect?: (id: string) => void
   onToggleSelectAll?: () => void
@@ -86,6 +87,7 @@ function FileTable({
   showCheckbox = false,
   showDate = true,
   showStatus = false,
+  alwaysShowQuality = false,
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
@@ -154,6 +156,19 @@ function FileTable({
   const hasQuality = isPending
     ? rows.some(r => r.selectedFormat && r.file.compatible_formats?.[r.selectedFormat]?.length)
     : rows.some(r => r.conversion?.quality)
+  const hasAnyStatus = rows.some(r => r.jobStatus)
+  const showStatusColumn = showStatus && hasAnyStatus
+
+  const buildQualityDescriptions = (qualities: string[] | undefined) => {
+    if (!qualities || qualities.length === 0) return undefined
+    const map: Record<string, string> = {}
+    for (const quality of qualities) {
+      const key = `table.qualityDescriptions.${quality}`
+      const description = t(key)
+      if (description !== key) map[quality] = description
+    }
+    return Object.keys(map).length > 0 ? map : undefined
+  }
 
   if (rows.length === 0) return null
 
@@ -210,7 +225,7 @@ function FileTable({
               </div>
             </th>
             {hasQuality && (
-              <th className="hidden xl:table-cell px-4 py-3">
+              <th className={`${alwaysShowQuality ? '' : 'hidden xl:table-cell '}px-4 py-3`}>
                 <div className="flex items-center gap-2">
                   <span className="uppercase">{t('table.quality')}</span>
                   {bulkQualities && bulkQualities.length > 0 && onBulkQualityChange && (
@@ -218,10 +233,11 @@ function FileTable({
                       value=""
                       formats={bulkQualities}
                       onChange={onBulkQualityChange}
-                    placeholder={t('table.all')}
-                    title={t('table.setQualityAll')}
+                      placeholder={t('table.all')}
+                      title={t('table.setQualityAll')}
                       disabled={converting}
                       presorted
+                      descriptions={buildQualityDescriptions(bulkQualities)}
                     />
                   )}
                 </div>
@@ -251,7 +267,7 @@ function FileTable({
                 </button>
               </th>
             )}
-            {showStatus && (
+            {showStatusColumn && (
               <th className="px-2 sm:px-4 py-3 text-center uppercase">{t('table.status')}</th>
             )}
             {hasActions && (
@@ -297,7 +313,7 @@ function FileTable({
                     return (
                       <div className="lg:hidden text-xs text-text-muted mt-0.5 flex flex-wrap gap-x-2">
                         <span className="md:hidden">{size}</span>
-                        {quality && <span className="xl:hidden uppercase">{quality}</span>}
+                        {quality && !alwaysShowQuality && <span className="xl:hidden uppercase">{quality}</span>}
                         {dateStr && <span>{dateStr}</span>}
                       </div>
                     )
@@ -340,7 +356,7 @@ function FileTable({
                   )}
               </td>
               {hasQuality && (
-                <td className="hidden xl:table-cell px-4 py-3 whitespace-nowrap">
+                <td className={`${alwaysShowQuality ? '' : 'hidden xl:table-cell '}px-4 py-3 whitespace-nowrap`}>
                   {(() => {
                     if (isPending) {
                       const qualities = row.selectedFormat ? row.file.compatible_formats?.[row.selectedFormat] : undefined
@@ -354,6 +370,7 @@ function FileTable({
                           placeholder={t('table.qualityPlaceholder')}
                           title={`Quality: ${row.selectedQuality || 'default'}`}
                           presorted
+                          descriptions={buildQualityDescriptions(sortedQualities)}
                         />
                       ) : (
                         <span className="text-xs text-text-muted">—</span>
@@ -382,7 +399,7 @@ function FileTable({
                   }
                 </td>
               )}
-              {showStatus && (
+              {showStatusColumn && (
                 <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-center">
                   {row.jobStatus ? (() => {
                     const label = t(`table.statusLabel.${row.jobStatus}`)
@@ -398,9 +415,7 @@ function FileTable({
                         {icon}
                       </span>
                     )
-                  })() : (
-                    <span className="text-xs text-text-muted">—</span>
-                  )}
+                  })() : null}
                 </td>
               )}
               {hasActions && (
