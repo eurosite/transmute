@@ -5,7 +5,7 @@ on:
     branches: 
       - main
     paths: 
-      - README.md
+      - .github/README.md
       - .github/workflows/docker-readme-update.yml
 
 jobs:
@@ -33,4 +33,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PUBLIC_RW_TOKEN }}
           repository: neonvariant/transmute
-          #readme-filepath: README.docker.md
+          readme-filepath: .github/README.md
