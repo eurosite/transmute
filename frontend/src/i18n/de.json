@@ -7,7 +7,7 @@
     "signIn": "Transmute - Anmelden",
     "converter": "Transmute - Konverter",
     "files": "Transmute - Dateien",
-    "history": "Transmute - Verlauf",
+    "history": "Transmute - Jobs",
     "settings": "Transmute - Einstellungen",
     "account": "Transmute - Mein Konto",
     "userManagement": "Transmute - Benutzerverwaltung",
@@ -16,7 +16,7 @@
   "nav": {
     "convert": "Konvertieren",
     "files": "Dateien",
-    "history": "Verlauf",
+    "history": "Jobs",
     "converter": "Konverter",
     "logo": "Transmute-Logo"
   },
@@ -99,7 +99,11 @@
     "downloadAll": "Alle {{count}} Dateien herunterladen",
     "downloading": "Download läuft...",
     "ignoredUnsupported": "{{count}} Datei wurde ignoriert, da keine unterstützten Konvertierungen verfügbar sind.",
-    "ignoredUnsupported_other": "{{count}} Dateien wurden ignoriert, da keine unterstützten Konvertierungen verfügbar sind."
+    "ignoredUnsupported_other": "{{count}} Dateien wurden ignoriert, da keine unterstützten Konvertierungen verfügbar sind.",
+    "jobsInQueue": "{{count}} Auftrag wird verarbeitet",
+    "jobsInQueue_other": "{{count}} Aufträge werden verarbeitet",
+    "jobsInProgressHint": "Ihre Konvertierungen werden im Hintergrund verarbeitet. Sie können weiterarbeiten.",
+    "viewQueue": "Jobs anzeigen"
   },
   "files": {
     "title": "Dateien",
@@ -115,7 +119,7 @@
     "deleteFailed": "Löschen fehlgeschlagen"
   },
   "history": {
-    "title": "Verlauf",
+    "title": "Jobs",
     "loading": "Konvertierungen werden geladen...",
     "noConversions": "Noch keine konvertierten Dateien.",
     "downloadSelected": "{{count}} Datei herunterladen",
@@ -126,7 +130,9 @@
     "downloadingSelected": "Download läuft...",
     "loadFailed": "Konvertierungen konnten nicht geladen werden",
     "fetchFailed": "Konvertierungen konnten nicht abgerufen werden",
-    "deleteFailed": "Löschen fehlgeschlagen"
+    "deleteFailed": "Löschen fehlgeschlagen",
+    "cancelFailed": "Auftrag konnte nicht abgebrochen werden",
+    "retryFailed": "Wiederholung des Auftrags fehlgeschlagen"
   },
   "settings": {
     "title": "Einstellungen",
@@ -264,7 +270,17 @@
     "setFormatAll": "Format für alle Dateien festlegen",
     "setQualityAll": "Qualität für alle Dateien festlegen",
     "all": "Alle",
-    "noMatches": "Keine Treffer"
+    "noMatches": "Keine Treffer",
+    "status": "Status",
+    "cancel": "Abbrechen",
+    "retry": "Wiederholen",
+    "statusLabel": {
+      "queued": "In Warteschlange",
+      "running": "Läuft",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen"
+    }
   },
   "preview": {
     "close": "Vorschau schließen",

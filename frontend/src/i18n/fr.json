@@ -7,7 +7,7 @@
     "signIn": "Transmute - Connexion",
     "converter": "Transmute - Convertisseur",
     "files": "Transmute - Fichiers",
-    "history": "Transmute - Historique",
+    "history": "Transmute - Tâches",
     "settings": "Transmute - Paramètres",
     "account": "Transmute - Mon compte",
     "userManagement": "Transmute - Gestion des utilisateurs",
@@ -16,7 +16,7 @@
   "nav": {
     "convert": "Conversion",
     "files": "Fichiers",
-    "history": "Historique",
+    "history": "Tâches",
     "converter": "Convertisseur",
     "logo": "Logo Transmute"
   },
@@ -99,7 +99,11 @@
     "downloadAll": "Télécharger les {{count}} fichiers",
     "downloading": "Téléchargement...",
     "ignoredUnsupported": "{{count}} fichier ignoré avec aucune conversion supporté.",
-    "ignoredUnsupported_other": "{{count}} fichiers ignorés avec aucune conversion supporté."
+    "ignoredUnsupported_other": "{{count}} fichiers ignorés avec aucune conversion supporté.",
+    "jobsInQueue": "{{count}} tâche en cours",
+    "jobsInQueue_other": "{{count}} tâches en cours",
+    "jobsInProgressHint": "Vos conversions sont en cours en arrière-plan. Vous pouvez continuer à travailler.",
+    "viewQueue": "Voir les tâches"
   },
   "files": {
     "title": "Fichiers",
@@ -115,7 +119,7 @@
     "deleteFailed": "La suppression a échoué"
   },
   "history": {
-    "title": "Historique",
+    "title": "Tâches",
     "loading": "Chargement des conversions...",
     "noConversions": "Aucun fichier converti pour le moment.",
     "downloadSelected": "Télécharger {{count}} fichier",
@@ -126,7 +130,9 @@
     "downloadingSelected": "Téléchargement...",
     "loadFailed": "Le chargement des conversions a échoué",
     "fetchFailed": "La récupération des conversions a échoué",
-    "deleteFailed": "La suppression a échoué"
+    "deleteFailed": "La suppression a échoué",
+    "cancelFailed": "Échec de l'annulation de la tâche",
+    "retryFailed": "Échec de la nouvelle tentative"
   },
   "settings": {
     "title": "Paramètres",
@@ -264,7 +270,17 @@
     "setFormatAll": "Définir le format pour tous les fichiers",
     "setQualityAll": "Définir la qualité pour tous les fichiers",
     "all": "Tout",
-    "noMatches": "Aucun résultat"
+    "noMatches": "Aucun résultat",
+    "status": "Statut",
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "statusLabel": {
+      "queued": "En file",
+      "running": "En cours",
+      "completed": "Terminée",
+      "failed": "Échouée",
+      "cancelled": "Annulée"
+    }
   },
   "preview": {
     "close": "Fermer l'aperçu",

@@ -7,7 +7,7 @@
     "signIn": "Transmute - Iniciar Sesión",
     "converter": "Transmute - Convertidor",
     "files": "Transmute - Archivos",
-    "history": "Transmute - Historial",
+    "history": "Transmute - Trabajos",
     "settings": "Transmute - Ajustes",
     "account": "Transmute - Mi Cuenta",
     "userManagement": "Transmute - Gestión de Usuarios",
@@ -16,7 +16,7 @@
   "nav": {
     "convert": "Convertir",
     "files": "Archivos",
-    "history": "Historial",
+    "history": "Trabajos",
     "converter": "Convertidor",
     "logo": "Transmute Logo"
   },
@@ -99,7 +99,11 @@
     "downloadAll": "Descargar todos los {{count}} archivos",
     "downloading": "Descargando...",
     "ignoredUnsupported": "Se ignoró {{count}} archivo sin conversiones compatibles.",
-    "ignoredUnsupported_other": "Se ignoraron {{count}} archivos sin conversiones compatibles."
+    "ignoredUnsupported_other": "Se ignoraron {{count}} archivos sin conversiones compatibles.",
+    "jobsInQueue": "{{count}} trabajo en ejecución",
+    "jobsInQueue_other": "{{count}} trabajos en ejecución",
+    "jobsInProgressHint": "Tus conversiones se están procesando en segundo plano. Puedes seguir trabajando.",
+    "viewQueue": "Ver trabajos"
   },
   "files": {
     "title": "Archivos",
@@ -115,7 +119,7 @@
     "deleteFailed": "Error al borrar"
   },
   "history": {
-    "title": "Historial",
+    "title": "Trabajos",
     "loading": "Cargando conversiones...",
     "noConversions": "Aún no hay archivos convertidos.",
     "downloadSelected": "Descargar {{count}} Archivo",
@@ -126,7 +130,9 @@
     "downloadingSelected": "Descargando...",
     "loadFailed": "Error al cargar las conversiones",
     "fetchFailed": "Error al obtener las conversiones",
-    "deleteFailed": "Error al borrar"
+    "deleteFailed": "Error al borrar",
+    "cancelFailed": "No se pudo cancelar el trabajo",
+    "retryFailed": "No se pudo reintentar el trabajo"
   },
   "settings": {
     "title": "Ajustes",
@@ -264,7 +270,17 @@
     "setFormatAll": "Establecer formato para todos los archivos",
     "setQualityAll": "Establecer calidad para todos los archivos",
     "all": "Todos",
-    "noMatches": "No coincidencias"
+    "noMatches": "No coincidencias",
+    "status": "Estado",
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "statusLabel": {
+      "queued": "En cola",
+      "running": "En curso",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado"
+    }
   },
   "preview": {
     "close": "Cerrar vista previa",
