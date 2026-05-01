@@ -7,7 +7,7 @@
     "signIn": "Transmute - Sign In",
     "converter": "Transmute - Converter",
     "files": "Transmute - Files",
-    "history": "Transmute - History",
+    "history": "Transmute - Jobs",
     "settings": "Transmute - Settings",
     "account": "Transmute - My Account",
     "userManagement": "Transmute - User Management",
@@ -16,7 +16,7 @@
   "nav": {
     "convert": "Convert",
     "files": "Files",
-    "history": "History",
+    "history": "Jobs",
     "converter": "Converter",
     "logo": "Transmute Logo"
   },
@@ -99,7 +99,11 @@
     "downloadAll": "Download All {{count}} Files",
     "downloading": "Downloading...",
     "ignoredUnsupported": "Ignored {{count}} file with no supported conversions.",
-    "ignoredUnsupported_other": "Ignored {{count}} files with no supported conversions."
+    "ignoredUnsupported_other": "Ignored {{count}} files with no supported conversions.",
+    "jobsInQueue": "{{count}} job running",
+    "jobsInQueue_other": "{{count}} jobs running",
+    "jobsInProgressHint": "Your conversions are processing in the background. You can keep working.",
+    "viewQueue": "View jobs"
   },
   "files": {
     "title": "Files",
@@ -115,7 +119,7 @@
     "deleteFailed": "Delete failed"
   },
   "history": {
-    "title": "History",
+    "title": "Jobs",
     "loading": "Loading conversions...",
     "noConversions": "No converted files yet.",
     "downloadSelected": "Download {{count}} File",
@@ -126,7 +130,9 @@
     "downloadingSelected": "Downloading...",
     "loadFailed": "Failed to load conversions",
     "fetchFailed": "Failed to fetch conversions",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "cancelFailed": "Failed to cancel job",
+    "retryFailed": "Failed to retry job"
   },
   "settings": {
     "title": "Settings",
@@ -264,7 +270,22 @@
     "setFormatAll": "Set format for all files",
     "setQualityAll": "Set quality for all files",
     "all": "All",
-    "noMatches": "No matches"
+    "qualityDescriptions": {
+      "low": "Smaller file size, fast conversion speed, poor quality",
+      "medium": "Medium file size, medium conversion speed, decent quality",
+      "high": "Large file size, slow conversion speed, high quality"
+    },
+    "noMatches": "No matches",
+    "status": "Status",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "statusLabel": {
+      "queued": "Queued",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
   },
   "preview": {
     "close": "Close preview",

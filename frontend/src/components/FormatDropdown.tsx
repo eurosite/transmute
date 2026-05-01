@@ -12,6 +12,7 @@ interface FormatDropdownProps {
   disabled?: boolean
   triggerClassName?: string
   presorted?: boolean
+  descriptions?: Record<string, string>
 }
 
 function FormatDropdown({
@@ -23,6 +24,7 @@ function FormatDropdown({
   disabled = false,
   triggerClassName = '',
   presorted = false,
+  descriptions,
 }: FormatDropdownProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -183,22 +185,30 @@ function FormatDropdown({
         {filtered.length === 0 ? (
           <div className="px-3 py-2 text-xs text-text-muted italic">{t('dropdown.noMatches')}</div>
         ) : (
-          filtered.map((format, i) => (
-            <button
-              key={format}
-              type="button"
-              onClick={() => handleSelect(format)}
-              className={`w-full text-left px-3 py-1.5 text-xs font-mono uppercase transition duration-100 ${
-                format === value
-                  ? 'text-primary bg-primary/15'
-                  : i === highlightIndex
-                    ? 'text-text bg-surface-dark'
-                    : 'text-text-muted hover:text-text hover:bg-surface-dark/50'
-              }`}
-            >
-              {format}
-            </button>
-          ))
+          filtered.map((format, i) => {
+            const description = descriptions?.[format]
+            return (
+              <button
+                key={format}
+                type="button"
+                onClick={() => handleSelect(format)}
+                className={`w-full text-left px-3 py-1.5 transition duration-100 ${
+                  format === value
+                    ? 'text-primary bg-primary/15'
+                    : i === highlightIndex
+                      ? 'text-text bg-surface-dark'
+                      : 'text-text-muted hover:text-text hover:bg-surface-dark/50'
+                }`}
+              >
+                <span className="text-xs font-mono uppercase">{format}</span>
+                {description && (
+                  <span className="mt-0.5 block text-[10px] normal-case leading-snug text-text-muted">
+                    {description}
+                  </span>
+                )}
+              </button>
+            )
+          })
         )}
       </div>
     </div>,

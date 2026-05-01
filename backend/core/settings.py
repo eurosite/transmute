@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     # ===== Storage =====
 
     data_dir: Path = Field(default=Path("data"))
+    domain_auth_config_path: Path = Field(default=Path("domain_auth/config.json"))
     web_dir: Path = Field(default=Path("frontend/dist"))
 
     # Derived paths (computed automatically)
@@ -40,8 +41,16 @@ class Settings(BaseSettings):
     file_table_name: str = "FILES_METADATA"
     conversion_table_name: str = "CONVERSIONS_METADATA"
     conversion_relations_table_name: str = "CONVERSION_RELATIONS"
+    conversion_jobs_table_name: str = "CONVERSION_JOBS"
     app_settings_table_name: str = "APP_SETTINGS"
     user_table_name: str = "USERS"
+
+    # ===== Conversion queue =====
+    # Number of background worker threads.
+    conversion_worker_concurrency: int = 5
+    # If a `running` job exists at startup, it's stale (process restarted mid-job).
+    # Such jobs are marked failed during recovery on app boot.
+    conversion_job_stale_after_minutes: int = 60
 
     # ===== Authentication =====
     auth_secret_key: str = ""

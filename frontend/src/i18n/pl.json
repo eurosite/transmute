@@ -7,7 +7,7 @@
     "signIn": "Transmute - Rejestracja",
     "converter": "Transmute - Konwerter",
     "files": "Transmute - Pliki",
-    "history": "Transmute - Historia",
+    "history": "Transmute - Zadania",
     "settings": "Transmute - Ustawienia",
     "account": "Transmute - Moje konto",
     "userManagement": "Transmute - Zarządzanie użytkownikami",
@@ -16,7 +16,7 @@
   "nav": {
     "convert": "Konwersja",
     "files": "Pliki",
-    "history": "Historia",
+    "history": "Zadania",
     "converter": "Konwerter",
     "logo": "Logo Transmute"
   },
@@ -99,7 +99,11 @@
     "downloadAll": "Pobierz wszystkie {{count}} plików",
     "downloading": "Pobieranie...",
     "ignoredUnsupported": "Zignorowano {{count}} plik bez wsparcia konwersji.",
-    "ignoredUnsupported_other": "Zignorowano {{count}} plików bez wsparcia konwersji."
+    "ignoredUnsupported_other": "Zignorowano {{count}} plików bez wsparcia konwersji.",
+    "jobsInQueue": "{{count}} zadanie w trakcie",
+    "jobsInQueue_other": "{{count}} zadań w trakcie",
+    "jobsInProgressHint": "Twoje konwersje są przetwarzane w tle. Możesz dalej pracować.",
+    "viewQueue": "Zobacz zadania"
   },
   "files": {
     "title": "Pliki",
@@ -115,7 +119,7 @@
     "deleteFailed": "Niepowodzenie usuwania"
   },
   "history": {
-    "title": "History",
+    "title": "Zadania",
     "loading": "Ładowanie konwersji...",
     "noConversions": "Brak skonwertowanych plików.",
     "downloadSelected": "Pobierz {{count}} plik",
@@ -126,7 +130,9 @@
     "downloadingSelected": "Pobieranie...",
     "loadFailed": "Niepowodzenie ładowania konwersji",
     "fetchFailed": "Niepowodzenie pobierania konwersji",
-    "deleteFailed": "Niepowodzenie usuwania"
+    "deleteFailed": "Niepowodzenie usuwania",
+    "cancelFailed": "Nie udało się anulować zadania",
+    "retryFailed": "Nie udało się ponowić zadania"
   },
   "settings": {
     "title": "Ustawienia",
@@ -264,7 +270,22 @@
     "setFormatAll": "Ustaw format dla wszystkich plików",
     "setQualityAll": "Ustaw jakość dla wszystkich plików",
     "all": "Wszystko",
-    "noMatches": "Brak dopasowań"
+    "qualityDescriptions": {
+      "low": "Mniejszy rozmiar pliku, szybka konwersja, niska jakość",
+      "medium": "Średni rozmiar pliku, średnia szybkość konwersji, przyzwoita jakość",
+      "high": "Duży rozmiar pliku, wolna konwersja, wysoka jakość"
+    },
+    "noMatches": "Brak dopasowań",
+    "status": "Status",
+    "cancel": "Anuluj",
+    "retry": "Ponów",
+    "statusLabel": {
+      "queued": "W kolejce",
+      "running": "W trakcie",
+      "completed": "Zakończone",
+      "failed": "Nieudane",
+      "cancelled": "Anulowane"
+    }
   },
   "preview": {
     "close": "Zamknij podgląd",

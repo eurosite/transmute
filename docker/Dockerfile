@@ -14,7 +14,7 @@ FROM python:3.13-slim
 ARG BUILD_VERSION="dev"
 
 # https://github.com/kovidgoyal/calibre/releases
-ARG CALIBRE_VERSION="9.7.0"
+ARG CALIBRE_VERSION="9.8.0"
 # https://github.com/jgm/pandoc/releases
 ARG PANDOC_VERSION="3.9.0.2"
 # https://github.com/jgraph/drawio-desktop/releases

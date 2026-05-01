@@ -1,6 +1,7 @@
 from .settings import get_settings
 from .logging import build_logging_config, configure_logging
 from .media_types import media_type_aliases, media_type_extensions
+from .domain_auth import get_domain_auth_for_url, reload_domain_auth_cache
 
 from .helper_functions import (
     assign_orphaned_rows_to_admin,
@@ -33,4 +34,6 @@ __all__ = [
     "validate_hexadecimal_filename",
     "migrate_table_columns",
     "get_file_extension",
+    "get_domain_auth_for_url",
+    "reload_domain_auth_cache",
 ]

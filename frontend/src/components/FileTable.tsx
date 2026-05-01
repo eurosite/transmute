@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FaCheckSquare, FaSquare, FaSort, FaSortUp, FaSortDown, FaDownload, FaTrash, FaEye } from 'react-icons/fa'
+import { FaCheckSquare, FaSquare, FaSort, FaSortUp, FaSortDown, FaDownload, FaTrash, FaEye, FaTimes, FaRedo, FaCheckCircle, FaSpinner, FaHourglassHalf, FaTimesCircle, FaBan } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
 import { stripExtension } from '../utils/filename'
 import FormatDropdown from './FormatDropdown'
@@ -24,6 +24,8 @@ export interface ConversionInfo {
   quality?: string
 }
 
+export type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+
 export interface FileTableRow {
   id: string
   file: FileInfo
@@ -32,13 +34,19 @@ export interface FileTableRow {
   selectedQuality?: string
   status?: 'pending' | 'failed'
   statusMessage?: string
+  jobStatus?: JobStatus
+  selectable?: boolean
   onFormatChange?: (format: string) => void
   onQualityChange?: (quality: string) => void
   onDelete?: () => void
   onDownload?: () => void
   onPreview?: () => void
+  onCancel?: () => void
+  onRetry?: () => void
   isDeleting?: boolean
   isDownloading?: boolean
+  isCancelling?: boolean
+  isRetrying?: boolean
 }
 
 interface FileTableProps {
@@ -46,6 +54,8 @@ interface FileTableProps {
   isPending?: boolean
   showCheckbox?: boolean
   showDate?: boolean
+  showStatus?: boolean
+  alwaysShowQuality?: boolean
   selectedIds?: Set<string>
   onToggleSelect?: (id: string) => void
   onToggleSelectAll?: () => void
@@ -76,6 +86,8 @@ function FileTable({
   isPending = false,
   showCheckbox = false,
   showDate = true,
+  showStatus = false,
+  alwaysShowQuality = false,
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
@@ -124,7 +136,7 @@ function FileTable({
     return sortDirection === 'asc' ? cmp : -cmp
   })
 
-  const SortIcon = ({ column }: { column: SortColumn }) => {
+  const renderSortIcon = (column: SortColumn) => {
     if (sortColumn !== column) return <FaSort className="inline ml-1 opacity-30 text-[0.6rem]" />
     return sortDirection === 'asc'
       ? <FaSortUp className="inline ml-1 text-[0.6rem]" />
@@ -140,10 +152,23 @@ function FileTable({
     return base + (row.conversion.extension || '')
   }
 
-  const hasActions = rows.some(r => r.onDownload || r.onDelete || r.onPreview)
+  const hasActions = rows.some(r => r.onDownload || r.onDelete || r.onPreview || r.onCancel || r.onRetry)
   const hasQuality = isPending
     ? rows.some(r => r.selectedFormat && r.file.compatible_formats?.[r.selectedFormat]?.length)
     : rows.some(r => r.conversion?.quality)
+  const hasAnyStatus = rows.some(r => r.jobStatus)
+  const showStatusColumn = showStatus && hasAnyStatus
+
+  const buildQualityDescriptions = (qualities: string[] | undefined) => {
+    if (!qualities || qualities.length === 0) return undefined
+    const map: Record<string, string> = {}
+    for (const quality of qualities) {
+      const key = `table.qualityDescriptions.${quality}`
+      const description = t(key)
+      if (description !== key) map[quality] = description
+    }
+    return Object.keys(map).length > 0 ? map : undefined
+  }
 
   if (rows.length === 0) return null
 
@@ -153,7 +178,7 @@ function FileTable({
         <thead className="text-xs uppercase bg-surface-dark text-text-muted">
           <tr>
             {showCheckbox && (
-              <th className="px-3 py-3 w-10">
+              <th className="px-2 sm:px-3 py-3 w-8 sm:w-10">
                 {onToggleSelectAll && (
                   <button
                     onClick={onToggleSelectAll}
@@ -166,18 +191,18 @@ function FileTable({
               </th>
             )}
             <th 
-              className="px-4 py-3"
+              className="px-3 sm:px-4 py-3"
               aria-sort={sortColumn === 'filename' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
             >
               <button
                 onClick={() => handleSort('filename')}
                 className="flex items-center gap-1 hover:text-text transition uppercase"
               >
-                {t('table.filename')} <SortIcon column="filename" />
+                {t('table.filename')} {renderSortIcon('filename')}
               </button>
             </th>
             <th
-              className="px-4 py-3"
+              className="px-2 sm:px-4 py-3"
               aria-sort={sortColumn=== 'type' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
             >
               <div className="flex items-center gap-2">
@@ -185,7 +210,7 @@ function FileTable({
                   onClick={() => handleSort('type')}
                   className="flex items-center gap-1 hover:text-text transition uppercase"
                 >
-                  {t('table.format')} <SortIcon column="type" />
+                  {t('table.format')} {renderSortIcon('type')}
                 </button>
                 {bulkFormats && bulkFormats.length > 0 && onBulkFormatChange && (
                   <FormatDropdown
@@ -200,7 +225,7 @@ function FileTable({
               </div>
             </th>
             {hasQuality && (
-              <th className="px-4 py-3">
+              <th className={`${alwaysShowQuality ? '' : 'hidden xl:table-cell '}px-4 py-3`}>
                 <div className="flex items-center gap-2">
                   <span className="uppercase">{t('table.quality')}</span>
                   {bulkQualities && bulkQualities.length > 0 && onBulkQualityChange && (
@@ -208,41 +233,45 @@ function FileTable({
                       value=""
                       formats={bulkQualities}
                       onChange={onBulkQualityChange}
-                    placeholder={t('table.all')}
-                    title={t('table.setQualityAll')}
+                      placeholder={t('table.all')}
+                      title={t('table.setQualityAll')}
                       disabled={converting}
                       presorted
+                      descriptions={buildQualityDescriptions(bulkQualities)}
                     />
                   )}
                 </div>
               </th>
             )}
             <th
-              className="px-4 py-3"
+              className="hidden md:table-cell px-4 py-3"
               aria-sort={sortColumn=== 'size' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
             >
               <button
                 onClick={() => handleSort('size')}
                 className="flex items-center gap-1 hover:text-text transition uppercase"
               >
-                {t('table.size')} <SortIcon column="size" />
+                {t('table.size')} {renderSortIcon('size')}
               </button>
             </th>
             {showDate && (
               <th
-                className="px-4 py-3"
+                className="hidden lg:table-cell px-4 py-3"
                 aria-sort={sortColumn=== 'date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 <button
                   onClick={() => handleSort('date')}
                   className="flex items-center gap-1 hover:text-text transition uppercase"
                 >
-                  {t('table.date')} <SortIcon column="date" />
+                  {t('table.date')} {renderSortIcon('date')}
                 </button>
               </th>
             )}
+            {showStatusColumn && (
+              <th className="px-2 sm:px-4 py-3 text-center uppercase">{t('table.status')}</th>
+            )}
             {hasActions && (
-              <th className="px-4 py-3 text-right">{t('table.actions')}</th>
+              <th className="px-2 sm:px-4 py-3 text-right">{t('table.actions')}</th>
             )}
           </tr>
         </thead>
@@ -255,8 +284,8 @@ function FileTable({
               }`}
             >
               {showCheckbox && (
-                <td className="px-3 py-3">
-                  {onToggleSelect && (
+                <td className="px-2 sm:px-3 py-3">
+                  {onToggleSelect && row.selectable !== false && (
                     <button
                       onClick={() => onToggleSelect(row.id)}
                       className="text-primary hover:text-primary-light text-lg transition duration-200"
@@ -267,14 +296,28 @@ function FileTable({
                   )}
                 </td>
               )}
-              <td className="px-4 py-3">
-                <div className="max-w-[16rem]">
+              <td className="px-3 sm:px-4 py-3">
+                <div className="max-w-[10rem] sm:max-w-[14rem] md:max-w-[16rem]">
                   <span
                     className="font-medium text-text truncate block"
                     title={getDisplayFilename(row)}
                   >
                     {getDisplayFilename(row)}
                   </span>
+                  {(() => {
+                    const size = formatFileSize(row.conversion?.size_bytes ?? row.file.size_bytes)
+                    const dateStr = (row.file.created_at || row.conversion?.created_at)
+                      ? new Date(row.conversion?.created_at || row.file.created_at!).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                      : null
+                    const quality = !isPending && row.conversion?.quality ? row.conversion.quality : null
+                    return (
+                      <div className="lg:hidden text-xs text-text-muted mt-0.5 flex flex-wrap gap-x-2">
+                        <span className="md:hidden">{size}</span>
+                        {quality && !alwaysShowQuality && <span className="xl:hidden uppercase">{quality}</span>}
+                        {dateStr && <span>{dateStr}</span>}
+                      </div>
+                    )
+                  })()}
                   {row.status === 'failed' && (
                     <div className="mt-1">
                       <span className="inline-block text-[0.65rem] font-semibold uppercase tracking-wide bg-primary/20 px-2 py-0.5 rounded text-primary-light">
@@ -289,7 +332,7 @@ function FileTable({
                   )}
                 </div>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="px-2 sm:px-4 py-3 whitespace-nowrap">
                   {(row.conversion || row.selectedFormat) ? (
                     isPending && row.file.compatible_formats && Object.keys(row.file.compatible_formats).length > 0 && row.onFormatChange ? (
                       <FormatDropdown
@@ -313,7 +356,7 @@ function FileTable({
                   )}
               </td>
               {hasQuality && (
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className={`${alwaysShowQuality ? '' : 'hidden xl:table-cell '}px-4 py-3 whitespace-nowrap`}>
                   {(() => {
                     if (isPending) {
                       const qualities = row.selectedFormat ? row.file.compatible_formats?.[row.selectedFormat] : undefined
@@ -327,6 +370,7 @@ function FileTable({
                           placeholder={t('table.qualityPlaceholder')}
                           title={`Quality: ${row.selectedQuality || 'default'}`}
                           presorted
+                          descriptions={buildQualityDescriptions(sortedQualities)}
                         />
                       ) : (
                         <span className="text-xs text-text-muted">—</span>
@@ -343,25 +387,44 @@ function FileTable({
                 </td>
               )}
               <td
-                className="px-4 py-3 text-text-muted whitespace-nowrap"
+                className="hidden md:table-cell px-4 py-3 text-text-muted whitespace-nowrap"
                 title={row.conversion ? `${formatFileSize(row.file.size_bytes)} → ${formatFileSize(row.conversion.size_bytes)}` : undefined}
               >
                 {formatFileSize(row.conversion?.size_bytes ?? row.file.size_bytes)}
               </td>
               {showDate && (
-                <td className="px-4 py-3 text-text-muted whitespace-nowrap">
+                <td className="hidden lg:table-cell px-4 py-3 text-text-muted whitespace-nowrap">
                   {(row.file.created_at || row.conversion?.created_at) &&
                     new Date(row.conversion?.created_at || row.file.created_at!).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
                   }
                 </td>
               )}
+              {showStatusColumn && (
+                <td className="px-2 sm:px-4 py-3 whitespace-nowrap text-center">
+                  {row.jobStatus ? (() => {
+                    const label = t(`table.statusLabel.${row.jobStatus}`)
+                    const tooltip = row.statusMessage ? `${label} — ${row.statusMessage}` : label
+                    const icon =
+                      row.jobStatus === 'completed' ? <FaCheckCircle className="text-success text-base" /> :
+                      row.jobStatus === 'running' ? <FaSpinner className="text-primary-light text-base animate-spin" /> :
+                      row.jobStatus === 'queued' ? <FaHourglassHalf className="text-text-muted text-base" /> :
+                      row.jobStatus === 'cancelled' ? <FaBan className="text-text-muted text-base" /> :
+                      <FaTimesCircle className="text-primary-light text-base" />
+                    return (
+                      <span className="inline-flex w-full justify-center" title={tooltip} aria-label={tooltip}>
+                        {icon}
+                      </span>
+                    )
+                  })() : null}
+                </td>
+              )}
               {hasActions && (
-                <td className="px-4 py-3">
-                  <div className="flex gap-1.5 justify-end">
+                <td className="px-2 sm:px-4 py-3">
+                  <div className="flex gap-0.5 sm:gap-1.5 justify-end">
                     {row.onPreview && (
                       <button
                         onClick={row.onPreview}
-                        className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface-dark transition duration-200"
+                        className="p-1.5 sm:p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface-dark transition duration-200"
                         title={t('table.preview')}
                       >
                         <FaEye className="text-sm" />
@@ -371,17 +434,37 @@ function FileTable({
                       <button
                         onClick={row.onDownload}
                         disabled={row.isDownloading}
-                        className="p-2 rounded-lg text-success hover:bg-success/20 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1.5 sm:p-2 rounded-lg text-success hover:bg-success/20 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t('table.download')}
                       >
                         <FaDownload className="text-sm" />
+                      </button>
+                    )}
+                    {row.onRetry && (
+                      <button
+                        onClick={row.onRetry}
+                        disabled={row.isRetrying}
+                        className="p-1.5 sm:p-2 rounded-lg text-primary-light hover:bg-primary/20 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={t('table.retry')}
+                      >
+                        <FaRedo className="text-sm" />
+                      </button>
+                    )}
+                    {row.onCancel && (
+                      <button
+                        onClick={row.onCancel}
+                        disabled={row.isCancelling}
+                        className="p-1.5 sm:p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface-dark transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={t('table.cancel')}
+                      >
+                        <FaTimes className="text-sm" />
                       </button>
                     )}
                     {row.onDelete && (
                       <button
                         onClick={row.onDelete}
                         disabled={row.isDeleting}
-                        className="p-2 rounded-lg text-primary-light hover:bg-primary/20 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1.5 sm:p-2 rounded-lg text-primary-light hover:bg-primary/20 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t('table.delete')}
                       >
                         <FaTrash className="text-sm" />

@@ -2,16 +2,82 @@ import os
 import fitz  # PyMuPDF
 import pymupdf4llm
 import markdown
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
+from PIL import Image
+from pillow_heif import HeifImagePlugin
+import pillow_avif  # noqa: F401 — registers AVIF plugin on import
+import pillow_jxl   # noqa: F401 — registers JPEG XL plugin on import
+
 from .converter_interface import ConverterInterface
+
+
+# Raster image output formats supported via PyMuPDF page rendering + Pillow
+# encoding. Multi-page PDFs produce one image per page; the service layer
+# packages multi-file results into a single ZIP for download.
+_RASTER_OUTPUT_FORMATS: set = {
+    'png',
+    'jpeg',
+    'webp',
+    'tiff',
+    'bmp',
+    'gif',
+    'ppm',
+    'pgm',
+    'pbm',
+    'tga',
+    'jp2',
+    'avif',
+    'jxl',
+    'ico',
+    'dib',
+    'pcx',
+    'sgi',
+    'pnm',
+}
+
+# Pillow save format names, when they differ from our format key.
+_PILLOW_FORMAT_NAMES: dict = {
+    'jpeg': 'JPEG',
+    'jpg': 'JPEG',
+    'png': 'PNG',
+    'webp': 'WEBP',
+    'tiff': 'TIFF',
+    'bmp': 'BMP',
+    'gif': 'GIF',
+    'ppm': 'PPM',
+    'pgm': 'PPM',
+    'pbm': 'PPM',
+    'pnm': 'PPM',
+    'tga': 'TGA',
+    'jp2': 'JPEG2000',
+    'avif': 'AVIF',
+    'jxl': 'JXL',
+    'ico': 'ICO',
+    'dib': 'DIB',
+    'pcx': 'PCX',
+    'sgi': 'SGI',
+}
+
+# Output formats that can encode quality settings.
+_RASTER_QUALITY_FORMATS: set = {'jpeg', 'webp', 'avif', 'jxl', 'jp2'}
+
+# Per-quality DPI used when rendering PDF pages to raster images.
+_RASTER_QUALITY_DPI: dict = {
+    'low': 100,
+    'medium': 150,
+    'high': 300,
+}
+_DEFAULT_RASTER_DPI = 150
 
 
 class PyMuPDFConverter(ConverterInterface):
     """
     Converter for extracting content from PDF files using PyMuPDF.
-    Supports converting PDFs to text, markdown, and HTML formats.
+    Supports converting PDFs to text, markdown, HTML, and raster images
+    (one image per page).
     """
 
     supported_input_formats: set = {
@@ -26,7 +92,10 @@ class PyMuPDFConverter(ConverterInterface):
         'txt',
         'md',
         'html',
-    }
+    } | _RASTER_OUTPUT_FORMATS
+    # Quality controls render DPI for raster outputs and encoder quality for
+    # lossy formats, so every raster output advertises a quality option.
+    formats_with_qualities = set(_RASTER_OUTPUT_FORMATS)
 
     def __init__(self, input_file: str, output_dir: str, input_type: str, output_type: str):
         """
@@ -128,10 +197,13 @@ class PyMuPDFConverter(ConverterInterface):
 
         Args:
             overwrite: Whether to overwrite existing output file (default: True)
-            quality: Not applicable for PDF text extraction, ignored.
+            quality: For raster output, controls render DPI and encoder
+                quality ('low', 'medium', 'high'). Ignored for text outputs.
 
         Returns:
-            List containing the path to the converted output file.
+            List of paths to the converted output file(s). Text outputs
+            return a single file. Raster outputs return one file per PDF
+            page; the service layer packages multi-page results into a ZIP.
 
         Raises:
             FileNotFoundError: If input file doesn't exist.
@@ -145,6 +217,9 @@ class PyMuPDFConverter(ConverterInterface):
 
         if not os.path.isfile(self.input_file):
             raise FileNotFoundError(f"Input file not found: {self.input_file}")
+
+        if self.output_type in _RASTER_OUTPUT_FORMATS:
+            return self._convert_to_raster(overwrite, quality)
 
         # Generate output filename
         input_filename = Path(self.input_file).stem
@@ -183,3 +258,116 @@ class PyMuPDFConverter(ConverterInterface):
             raise
         except Exception as e:
             raise RuntimeError(f"PDF extraction failed: {str(e)}")
+
+    # ------------------------------------------------------------------
+    # Raster rendering (PDF -> image)
+    # ------------------------------------------------------------------
+
+    def _convert_to_raster(
+        self, overwrite: bool, quality: Optional[str]
+    ) -> list[str]:
+        """Render every page of the PDF to a raster image file."""
+        HeifImagePlugin.register_heif_opener()
+
+        dpi = _RASTER_QUALITY_DPI.get((quality or '').lower(), _DEFAULT_RASTER_DPI)
+        save_kwargs = self._get_pillow_save_kwargs(self.output_type, quality)
+        pillow_format = _PILLOW_FORMAT_NAMES.get(self.output_type, self.output_type.upper())
+
+        input_filename = Path(self.input_file).stem
+        output_paths: list[str] = []
+
+        try:
+            doc = fitz.open(self.input_file)
+        except Exception as exc:
+            raise RuntimeError(f"Failed to open PDF: {exc}") from exc
+
+        try:
+            page_count = doc.page_count
+            if page_count <= 0:
+                raise RuntimeError("PDF contains no pages.")
+
+            # Pad the page index so filenames sort lexicographically.
+            pad_width = max(3, len(str(page_count)))
+
+            for page_index in range(page_count):
+                page = doc.load_page(page_index)
+                page_label = str(page_index + 1).zfill(pad_width)
+                output_file = os.path.join(
+                    self.output_dir,
+                    f"{input_filename}-page-{page_label}.{self.output_type}",
+                )
+
+                if not overwrite and os.path.exists(output_file):
+                    output_paths.append(output_file)
+                    continue
+
+                try:
+                    pixmap = page.get_pixmap(dpi=dpi, alpha=True)
+                    # Round-trip through Pillow so we get broad format support
+                    # and consistent encoder options.
+                    image = Image.open(BytesIO(pixmap.tobytes("png")))
+                    image = self._prepare_image_for_format(image, self.output_type)
+                    image.save(output_file, format=pillow_format, **save_kwargs)
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"Failed to render PDF page {page_index + 1}: {exc}"
+                    ) from exc
+
+                if not os.path.exists(output_file):
+                    raise RuntimeError(f"Output file was not created: {output_file}")
+                output_paths.append(output_file)
+        finally:
+            doc.close()
+
+        return output_paths
+
+    @staticmethod
+    def _prepare_image_for_format(image: Image.Image, output_format: str) -> Image.Image:
+        """Convert image mode to one that the target encoder accepts."""
+        fmt = output_format.lower()
+        # Formats that don't support alpha — flatten on white.
+        if fmt in {'jpeg', 'jpg', 'pbm', 'pgm', 'ppm', 'pnm', 'pcx', 'bmp', 'dib', 'pfm'}:
+            if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                rgba = image.convert('RGBA')
+                background.paste(rgba, mask=rgba.split()[-1])
+                return background
+            if image.mode != 'RGB':
+                return image.convert('RGB')
+            return image
+        if fmt == 'gif':
+            # GIF prefers palette mode.
+            return image.convert('RGBA') if image.mode != 'RGBA' else image
+        if image.mode == 'P':
+            return image.convert('RGBA')
+        return image
+
+    @staticmethod
+    def _get_pillow_save_kwargs(
+        output_format: str, quality: Optional[str]
+    ) -> dict:
+        """Map quality hints to Pillow encoder options."""
+        fmt = output_format.lower()
+        q = (quality or '').lower()
+        kwargs: dict = {}
+
+        if fmt in ('jpeg', 'jpg'):
+            kwargs['quality'] = {'low': 60, 'medium': 80, 'high': 95}.get(q, 85)
+            kwargs['optimize'] = True
+        elif fmt == 'webp':
+            kwargs['quality'] = {'low': 60, 'medium': 80, 'high': 95}.get(q, 80)
+        elif fmt == 'avif':
+            kwargs['quality'] = {'low': 50, 'medium': 70, 'high': 90}.get(q, 70)
+        elif fmt == 'jxl':
+            kwargs['quality'] = {'low': 60, 'medium': 80, 'high': 95}.get(q, 80)
+        elif fmt == 'jp2':
+            kwargs['quality_mode'] = 'rates'
+            kwargs['quality_layers'] = {
+                'low': [40], 'medium': [20], 'high': [5]
+            }.get(q, [10])
+        elif fmt == 'tiff':
+            kwargs['compression'] = 'tiff_deflate'
+        elif fmt == 'png':
+            kwargs['optimize'] = True
+
+        return kwargs
