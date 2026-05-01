@@ -7,7 +7,7 @@
     "signIn": "Transmute - Log ind",
     "converter": "Transmute - Konverterer",
     "files": "Transmute - Filer",
-    "history": "Transmute - Historik",
+    "history": "Transmute - Jobs",
     "settings": "Transmute - Indstillinger",
     "account": "Transmute - Min Konto",
     "userManagement": "Transmute - Brugerstyring",
@@ -16,7 +16,7 @@
   "nav": {
     "convert": "Konverter",
     "files": "Filer",
-    "history": "Historik",
+    "history": "Jobs",
     "converter": "Konverterer",
     "logo": "Transmute Logo"
   },
@@ -99,7 +99,11 @@
     "downloadAll": "Download alle {{count}} filer",
     "downloading": "Downloader...",
     "ignoredUnsupported": "Ignoreret {{count}} fil uden understøttede konverteringer.",
-    "ignoredUnsupported_other": "Ignoreret {{count}} filer uden understøttede konverteringer."
+    "ignoredUnsupported_other": "Ignoreret {{count}} filer uden understøttede konverteringer.",
+    "jobsInQueue": "{{count}} kørende jobs",
+    "jobsInQueue_other": "{{count}} kørende jobs",
+    "jobsInProgressHint": "Dine konverteringer behandles i baggrunden. Du kan fortsætte med at arbejde.",
+    "viewQueue": "Vis jobs"
   },
   "files": {
     "title": "Filer",
@@ -115,7 +119,7 @@
     "deleteFailed": "Sletning mislykkedes"
   },
   "history": {
-    "title": "Historik",
+    "title": "Jobs",
     "loading": "Henter konverteringer...",
     "noConversions": "Ingen konverterede filer endnu.",
     "downloadSelected": "Download {{count}} fil",
@@ -126,7 +130,9 @@
     "downloadingSelected": "Downloader...",
     "loadFailed": "Mislykkedes at hente konverteringer",
     "fetchFailed": "Mislykkedes at hente konverteringer",
-    "deleteFailed": "Sletning mislykkedes"
+    "deleteFailed": "Sletning mislykkedes",
+    "cancelFailed": "Mislykkedes at annullere job",
+    "retryFailed": "Mislykkedes at forsøge job igen"
   },
   "settings": {
     "title": "Indstillinger",
@@ -208,6 +214,7 @@
     "updateFailed": "Mislykkedes at opdatere bruger",
     "deleteFailed": "Mislykkedes at slette bruger",
     "deleteSelfBlocked": "Sletning af den aktuelt loggede administrator fra denne skærm er blokeret.",
+    "deleted": "Bruger slettet succesfuldt.",
     "cannotChangeOwnRole": "Du kan ikke ændre din egen rolle",
     "member": "Medlem",
     "admin": "Administrator",
@@ -263,7 +270,22 @@
     "setFormatAll": "Sæt format for alle filer",
     "setQualityAll": "Sæt kvalitet for alle filer",
     "all": "Alle",
-    "noMatches": "Ingen matches"
+    "qualityDescriptions": {
+      "low": "Mindre filstørrelse, hurtig konvertering, dårlig kvalitet",
+      "medium": "Mellem filstørrelse, mellem konverteringsspeed, decent kvalitet",
+      "high": "Stor filstørrelse, langsom konverteringsspeed, høj kvalitet"
+    },
+    "noMatches": "Ingen matches",
+    "status": "Status",
+    "cancel": "Annuller",
+    "retry": "Forsøg igen",
+    "statusLabel": {
+      "queued": "I kø",
+      "running": "Kører",
+      "completed": "Afsluttet",
+      "failed": "Mislykkedes",
+      "cancelled": "Annulleret"
+    }
   },
   "preview": {
     "close": "Luk forhåndsvisning",
