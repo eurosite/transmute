@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 import shutil
 import uuid
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from converters import ConverterInterface
 from core import (
@@ -129,14 +130,65 @@ def run_conversion_job(
     except Exception as exc:
         raise ConversionFailedError(str(exc)) from exc
 
-    moved_output_file = Path(output_files[0]).rename(
-        f"{converted_dir}/{converted_id}{output_extension}"
-    )
+    if not output_files:
+        raise ConversionFailedError("Converter produced no output files")
+
+    if len(output_files) == 1:
+        moved_output_file = Path(output_files[0]).rename(
+            f"{converted_dir}/{converted_id}{output_extension}"
+        )
+        final_media_type = output_format
+        final_extension = output_extension
+    else:
+        # Multiple output files (e.g. multi-page PDF -> image). Package them
+        # into a single ZIP so the rest of the pipeline (DB, downloads,
+        # history) can keep treating each conversion as one persisted
+        # artifact.
+        moved_output_file = Path(f"{converted_dir}/{converted_id}.zip")
+        # Rename entries to use the original uploaded filename's stem
+        # instead of the UUID-based temp filename, so the user sees
+        # something recognizable inside the archive.
+        original_stem = Path(source_metadata.get("original_filename") or "output").stem or "output"
+        try:
+            with ZipFile(moved_output_file, "w", ZIP_DEFLATED) as zf:
+                for path_str in output_files:
+                    src = Path(path_str)
+                    # Keep any "-page-NNN" suffix and the extension; just
+                    # swap the leading UUID stem for the original stem.
+                    src_stem = src.stem
+                    suffix = src.suffix
+                    # Drop the leading temp stem if present.
+                    if "-page-" in src_stem:
+                        page_part = src_stem.split("-page-", 1)[1]
+                        arc_stem = f"{original_stem}-page-{page_part}"
+                    else:
+                        arc_stem = original_stem
+                    arcname = f"{arc_stem}{suffix}"
+                    zf.write(src, arcname=arcname)
+        except Exception as exc:
+            if moved_output_file.exists():
+                try:
+                    moved_output_file.unlink()
+                except OSError:
+                    pass
+            raise ConversionFailedError(
+                f"Failed to package multi-file conversion output: {exc}"
+            ) from exc
+        # Best-effort cleanup of the per-page temp files now that they are
+        # safely inside the ZIP. Leave them on disk if removal fails — the
+        # cleanup task will reap them later.
+        for path_str in output_files:
+            try:
+                Path(path_str).unlink(missing_ok=True)
+            except OSError:
+                pass
+        final_media_type = "zip"
+        final_extension = ".zip"
 
     converted_metadata = dict(source_metadata)
     converted_metadata["id"] = converted_id
-    converted_metadata["media_type"] = output_format
-    converted_metadata["extension"] = output_extension
+    converted_metadata["media_type"] = final_media_type
+    converted_metadata["extension"] = final_extension
     converted_metadata["storage_path"] = str(moved_output_file)
     converted_metadata["size_bytes"] = moved_output_file.stat().st_size
     converted_metadata["sha256_checksum"] = compute_sha256_checksum(moved_output_file)
