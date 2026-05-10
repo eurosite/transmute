@@ -19,6 +19,8 @@ ARG CALIBRE_VERSION="9.8.0"
 ARG PANDOC_VERSION="3.9.0.2"
 # https://github.com/jgraph/drawio-desktop/releases
 ARG DRAWIO_VERSION="29.7.9"
+# https://github.com/pgaskin/kepubify/releases
+ARG KEPUBIFY_VERSION="4.0.4"
 
 # Set working directory
 WORKDIR /app
@@ -111,6 +113,18 @@ RUN ARCH="${TARGETARCH:-$(dpkg --print-architecture)}" && \
     tar -xJf /tmp/calibre.txz -C /opt/calibre && \
     ln -sf /opt/calibre/ebook-convert /usr/bin/ebook-convert && \
     rm -f /tmp/calibre.txz
+
+# Install kepubify from upstream GitHub releases for EPUB->KEPUB conversion.
+RUN ARCH="${TARGETARCH:-$(dpkg --print-architecture)}" && \
+    case "$ARCH" in \
+      amd64) KEPUBIFY_ARCH="64bit" ;; \
+      arm64) KEPUBIFY_ARCH="arm64" ;; \
+      *) echo "Unsupported architecture for kepubify: $ARCH" >&2; exit 1 ;; \
+    esac && \
+    KEPUBIFY_URL="https://github.com/pgaskin/kepubify/releases/download/v${KEPUBIFY_VERSION}/kepubify-linux-${KEPUBIFY_ARCH}" && \
+    wget --tries=3 --waitretry=5 --retry-connrefused \
+         "$KEPUBIFY_URL" -O /usr/local/bin/kepubify && \
+    chmod +x /usr/local/bin/kepubify
 
 # Security patches: upgrade vulnerable packages to patched versions
 RUN apt-get update && \

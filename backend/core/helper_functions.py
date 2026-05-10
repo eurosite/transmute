@@ -279,6 +279,7 @@ def get_file_extension(filename: str) -> str:
         '.tar.bz2',
         '.tar.xz',
         '.tar.zst',
+        '.kepub.epub',
     }
     lower_filename = filename.lower()
     for ext in allowed_concatenated_extensions:

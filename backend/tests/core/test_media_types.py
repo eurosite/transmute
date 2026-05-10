@@ -45,5 +45,9 @@ def test_pdf_subtype_maps_to_pdf(subtype, ext):
 
 
 def test_all_pdf_subtypes_present():
-    expected = {"pdf/a", "pdf/x", "pdf/e", "pdf/ua", "pdf/vt"}
+    expected = {"pdf/a", "pdf/x", "pdf/e", "pdf/ua", "pdf/vt", "kepub"}
     assert expected == set(media_type_extensions.keys())
+
+
+def test_kepub_maps_to_compound_extension():
+    assert media_type_extensions["kepub"] == "kepub.epub"

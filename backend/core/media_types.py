@@ -33,4 +33,5 @@ media_type_extensions = {
     'pdf/e': 'pdf',
     'pdf/ua': 'pdf',
     'pdf/vt': 'pdf',
+    'kepub': 'kepub.epub',
 }

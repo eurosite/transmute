@@ -220,6 +220,8 @@ def test_compute_sha256_checksum_accepts_string_path(tmp_path):
     ("archive.tar.bz2", "tar.bz2"),
     ("archive.tar.xz", "tar.xz"),
     ("archive.tar.zst", "tar.zst"),
+    ("book.kepub.epub", "kepub.epub"),
+    ("BOOK.KEPUB.EPUB", "kepub.epub"),
     ("PHOTO.PNG", "png"),
     ("noext", ""),
     ("file.MP4", "mp4"),
